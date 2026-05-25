@@ -1,11 +1,11 @@
 # app/api/routes/device.py
 from typing import List
 
-from fastapi import APIRouter, Depends, UploadFile, File, Form
+from fastapi import APIRouter, Depends, File, Form, UploadFile
 from sqlalchemy.orm import Session
 
-from app.db.session import get_db
 from app.core.security_deps import get_current_user
+from app.db.session import get_db
 from app.models.user import User
 from app.schemas.device import (
     DeviceCreate,

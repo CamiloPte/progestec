@@ -10,8 +10,8 @@ from sqlalchemy.orm import Session
 from app.core.roles import (
     ROLE_ADMIN,
     ROLE_ADVISOR,
-    ROLE_TECHNICIAN,
     ROLE_CLIENT,
+    ROLE_TECHNICIAN,
     get_role_name,
 )
 from app.crud.invoice_crud import invoice_crud
@@ -21,7 +21,7 @@ from app.models.invoice import Invoice
 from app.models.invoice_payment import InvoicePayment
 from app.models.ticket import Ticket
 from app.models.user import User
-from app.schemas.invoice import InvoiceCreate, InvoiceCreateFromTicket, InvoiceRead
+from app.schemas.invoice import InvoiceCreateFromTicket, InvoiceRead
 from app.schemas.invoice_payment import (
     InvoicePaymentCreate,
     InvoicePaymentRead,
@@ -68,9 +68,7 @@ class InvoiceService:
 
     def _sum_payments(self, invoice: Invoice) -> Decimal:
         return sum(
-            Decimal(payment.amount or 0)
-            for payment in invoice.payments
-            if payment.state == 1
+            Decimal(payment.amount or 0) for payment in invoice.payments if payment.state == 1
         )
 
     def _map_payment(self, payment: InvoicePayment) -> InvoicePaymentRead:
@@ -134,11 +132,7 @@ class InvoiceService:
     def _calculate_parts_cost(self, ticket: Ticket) -> Decimal:
         if not ticket.ticket_parts:
             return Decimal("0")
-        return sum(
-            Decimal(tp.total_cost or 0)
-            for tp in ticket.ticket_parts
-            if tp.state == 1
-        )
+        return sum(Decimal(tp.total_cost or 0) for tp in ticket.ticket_parts if tp.state == 1)
 
     def _apply_in_memory_filters(
         self,
@@ -159,9 +153,7 @@ class InvoiceService:
             filtered = [inv for inv in filtered if inv.issue_date <= to_date]
         if with_debt:
             filtered = [
-                inv
-                for inv in filtered
-                if (Decimal(inv.total or 0) - self._sum_payments(inv)) > 0
+                inv for inv in filtered if (Decimal(inv.total or 0) - self._sum_payments(inv)) > 0
             ]
         return filtered
 
@@ -309,7 +301,7 @@ class InvoiceService:
         self._ensure_can_create(current_user)  # Solo admin/asesor
 
         invoice = self._get_invoice_or_404(db, invoice_id)
-        
+
         # Solo se pueden editar facturas en DRAFT
         if invoice.status.upper() != "DRAFT":
             raise HTTPException(
@@ -319,9 +311,23 @@ class InvoiceService:
 
         # Obtener valores actuales o nuevos
         parts_cost = Decimal(str(invoice.parts_cost or 0))
-        labor_cost = Decimal(str(payload.labor_cost if payload.labor_cost is not None else invoice.labor_cost or 0))
-        discount = Decimal(str(payload.discount_amount if payload.discount_amount is not None else invoice.discount_amount or 0))
-        tax_percentage = Decimal(str(payload.tax_percentage if payload.tax_percentage is not None else invoice.tax_percentage or 0))
+        labor_cost = Decimal(
+            str(payload.labor_cost if payload.labor_cost is not None else invoice.labor_cost or 0)
+        )
+        discount = Decimal(
+            str(
+                payload.discount_amount
+                if payload.discount_amount is not None
+                else invoice.discount_amount or 0
+            )
+        )
+        tax_percentage = Decimal(
+            str(
+                payload.tax_percentage
+                if payload.tax_percentage is not None
+                else invoice.tax_percentage or 0
+            )
+        )
 
         if labor_cost < 0 or discount < 0 or tax_percentage < 0:
             raise HTTPException(status_code=400, detail="Montos inválidos")
@@ -349,7 +355,7 @@ class InvoiceService:
             update_data["due_date"] = payload.due_date
         if payload.notes is not None:
             update_data["notes"] = payload.notes
-        
+
         # Si confirm=True, cambiar a PENDING
         if payload.confirm:
             update_data["status"] = "PENDING"
@@ -417,9 +423,7 @@ class InvoiceService:
     ) -> List[InvoicePaymentRead]:
         invoice = self._get_invoice_or_404(db, invoice_id)
         self._assert_can_view_invoice(current_user, invoice)
-        active = [
-            payment for payment in invoice.payments if payment.state == 1
-        ]
+        active = [payment for payment in invoice.payments if payment.state == 1]
         ordered = sorted(
             active,
             key=lambda p: p.paid_at or p.created_at or datetime.min,

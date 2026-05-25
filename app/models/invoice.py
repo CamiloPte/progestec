@@ -1,17 +1,17 @@
 from sqlalchemy import (
     Column,
+    DateTime,
+    ForeignKey,
     Integer,
     Numeric,
     String,
-    ForeignKey,
-    DateTime,
     Text,
     text,
 )
 from sqlalchemy.orm import relationship
 
 from app.db.base_class import Base
-from app.models.mixins import TimestampStateMixin, PKMixin
+from app.models.mixins import PKMixin, TimestampStateMixin
 
 
 class Invoice(Base, PKMixin, TimestampStateMixin):
@@ -61,4 +61,3 @@ class Invoice(Base, PKMixin, TimestampStateMixin):
         passive_deletes=True,
         lazy="selectin",
     )
-

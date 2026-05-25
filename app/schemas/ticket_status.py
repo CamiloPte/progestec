@@ -1,8 +1,10 @@
 from typing import Optional
+
 from app.schemas.common import BaseSchema, TimestampSchema
 
+
 class TicketStatusBase(BaseSchema):
-    code: str       # RECEIVED, ASSIGNED, REPAIR, READY, etc.
+    code: str  # RECEIVED, ASSIGNED, REPAIR, READY, etc.
     name: str
     order: int
 

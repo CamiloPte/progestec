@@ -1,21 +1,17 @@
-from typing import List, Optional
-from sqlalchemy.orm import Session, joinedload
 from datetime import datetime
+from typing import List, Optional
 
+from sqlalchemy.orm import Session, joinedload
+
+from app.models.device import Device
 from app.models.ticket import Ticket
 from app.models.ticket_history import TicketHistory
-from app.models.ticket_status import TicketStatus
-from app.models.device import Device
 from app.schemas.ticket import TicketCreate, TicketUpdate
 from app.schemas.ticket_history import TicketHistoryCreate
 
 
 class TicketCRUD:
-    def get_by_id(
-        self,
-        db: Session,
-        ticket_id: int
-    ) -> Optional[Ticket]:
+    def get_by_id(self, db: Session, ticket_id: int) -> Optional[Ticket]:
         return (
             db.query(Ticket)
             .options(
@@ -46,10 +42,7 @@ class TicketCRUD:
         return (
             db.query(Ticket)
             .join(Ticket.status)
-            .filter(
-                Ticket.state == 1,
-                Ticket.assignee_user_id == user_id
-            )
+            .filter(Ticket.state == 1, Ticket.assignee_user_id == user_id)
             .all()
         )
 

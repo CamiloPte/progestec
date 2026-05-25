@@ -1,13 +1,12 @@
-#app/schemas/device.py
+# app/schemas/device.py
 from typing import Optional
-from datetime import datetime
-from pydantic import BaseModel
+
 from app.schemas.common import BaseSchema, TimestampSchema
 
 
 class DeviceBase(BaseSchema):
     owner_user_id: int
-    type: str          # PHONE | LAPTOP | TABLET | OTHER
+    type: str  # PHONE | LAPTOP | TABLET | OTHER
     brand: str
     model: str
     serial: Optional[str] = None
@@ -61,6 +60,7 @@ class DeviceOwnerInline(BaseSchema):
     Pequeño resumen del dueño del dispositivo
     para usar en detalles.
     """
+
     id: int
     full_name: str | None = None
     phone: str | None = None

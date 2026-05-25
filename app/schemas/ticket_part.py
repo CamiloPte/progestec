@@ -2,9 +2,10 @@
 from datetime import datetime
 from decimal import Decimal
 from typing import Optional
-from app.schemas.common import BaseSchema
 
-from pydantic import BaseModel, Field
+from pydantic import Field
+
+from app.schemas.common import BaseSchema
 
 
 class TicketPartBase(BaseSchema):
@@ -20,6 +21,7 @@ class TicketPartCreate(TicketPartBase):
       - Si se envía, se usa ese valor.
       - Si viene vacío, se toma el unit_price actual de Part.
     """
+
     unit_price_snapshot: Optional[Decimal] = Field(
         default=None,
         description="Precio unitario al momento del uso (opcional, se congela)",
@@ -48,4 +50,3 @@ class TicketPartRead(BaseSchema):
     # Campos derivados para el front
     part_name: Optional[str] = None
     part_sku: Optional[str] = None
-

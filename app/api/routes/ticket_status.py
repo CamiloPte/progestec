@@ -3,13 +3,13 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
-from app.db.session import get_db
-from app.core.security_deps import get_current_user
 from app.core.roles import get_role_name
+from app.core.security_deps import get_current_user
 from app.core.ticket_status_transitions import get_allowed_transitions
+from app.crud.ticket_status_crud import ticket_status_crud
+from app.db.session import get_db
 from app.models.user import User
 from app.schemas.ticket_status import TicketStatusRead
-from app.crud.ticket_status_crud import ticket_status_crud
 
 router = APIRouter(prefix="/ticket-statuses", tags=["ticket-statuses"])
 
@@ -43,7 +43,7 @@ def list_valid_transitions(
     """
     role = get_role_name(current_user)
     allowed_codes = get_allowed_transitions(current_status_code, role)
-    
+
     # Obtener los objetos de estado para los códigos permitidos
     all_statuses = ticket_status_crud.list_active(db)
     return [s for s in all_statuses if s.code.upper() in allowed_codes]

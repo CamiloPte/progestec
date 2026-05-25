@@ -1,8 +1,10 @@
-from typing import Sequence, Optional
+from typing import Optional, Sequence
+
 from sqlalchemy.orm import Session
 
 from app.models.ticket_attachment import TicketAttachment
 from app.schemas.ticket_attachment import TicketAttachmentCreate
+
 
 class TicketAttachmentCRUD:
     def list_for_ticket(self, db: Session, ticket_id: int) -> Sequence[TicketAttachment]:
@@ -21,11 +23,7 @@ class TicketAttachmentCRUD:
         return obj
 
     def get_by_id(self, db: Session, attachment_id: int) -> Optional[TicketAttachment]:
-        return (
-            db.query(TicketAttachment)
-            .filter(TicketAttachment.id == attachment_id)
-            .first()
-        )
+        return db.query(TicketAttachment).filter(TicketAttachment.id == attachment_id).first()
 
     def soft_delete(self, db: Session, attachment: TicketAttachment) -> None:
         attachment.state = 0

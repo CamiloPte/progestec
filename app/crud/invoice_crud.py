@@ -1,14 +1,14 @@
-from typing import Dict, Any, Optional, Sequence, List
 from datetime import datetime
+from typing import Any, Dict, List, Optional, Sequence
 
 import sqlalchemy as sa
-from sqlalchemy.orm import Session, selectinload
 from sqlalchemy import func
+from sqlalchemy.orm import Session, selectinload
 
+from app.models.device import Device
 from app.models.invoice import Invoice
 from app.models.invoice_payment import InvoicePayment
 from app.models.ticket import Ticket
-from app.models.device import Device
 
 
 class InvoiceCRUD:
@@ -36,11 +36,7 @@ class InvoiceCRUD:
         )
 
     def get_by_ticket_id(self, db: Session, ticket_id: int) -> Optional[Invoice]:
-        return (
-            db.query(Invoice)
-            .filter(Invoice.ticket_id == ticket_id, Invoice.state == 1)
-            .first()
-        )
+        return db.query(Invoice).filter(Invoice.ticket_id == ticket_id, Invoice.state == 1).first()
 
     def list(
         self,

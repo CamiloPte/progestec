@@ -1,8 +1,9 @@
 from typing import Optional, Sequence
+
 from sqlalchemy.orm import Session
 
-from app.models.module_role import ModuleRole
 from app.models.module import Module
+from app.models.module_role import ModuleRole
 
 
 class ModuleRoleCRUD:

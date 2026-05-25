@@ -1,8 +1,8 @@
-from sqlalchemy import Column, Integer, Numeric, String, ForeignKey, DateTime, text
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, Numeric, String, text
 from sqlalchemy.orm import relationship
 
 from app.db.base_class import Base
-from app.models.mixins import TimestampStateMixin, PKMixin
+from app.models.mixins import PKMixin, TimestampStateMixin
 
 
 class InvoicePayment(Base, PKMixin, TimestampStateMixin):
@@ -26,4 +26,3 @@ class InvoicePayment(Base, PKMixin, TimestampStateMixin):
 
     invoice = relationship("Invoice", back_populates="payments")
     created_by = relationship("User")
-

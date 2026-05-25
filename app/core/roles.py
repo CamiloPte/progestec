@@ -19,6 +19,5 @@ def get_role_name(user: User) -> str | None:
 
 
 def user_has_role(user: User, *roles: str) -> bool:
-    
     role_name = get_role_name(user)
     return role_name in roles

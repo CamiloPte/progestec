@@ -1,5 +1,7 @@
-from typing import Optional, List
-from pydantic import BaseModel, EmailStr
+from typing import List, Optional
+
+from pydantic import EmailStr
+
 from app.schemas.common import BaseSchema, TimestampSchema
 
 
@@ -25,6 +27,7 @@ class QuickClientCreate(BaseSchema):
     """
     Para creación rápida de clientes desde flujo de tickets.
     """
+
     full_name: str
     email: EmailStr
     identification: str
@@ -47,7 +50,7 @@ class UserReadMinimal(TimestampSchema):
     identification_type: Optional[str] = None
     identification: Optional[str] = None
     role_id: int
-    role_name: Optional[str] = None   # Este campo lo voy a necesitar para conectar con el frontend
+    role_name: Optional[str] = None  # Este campo lo voy a necesitar para conectar con el frontend
     state: int
     must_change_password: bool = False
     modules: List[str] = []
@@ -58,4 +61,5 @@ class UserReadDetail(UserReadMinimal):
     Aquí podríamos anidar role, atributos,
     y dispositivos si el endpoint lo requiere.
     """
+
     pass

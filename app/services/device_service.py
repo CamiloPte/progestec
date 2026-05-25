@@ -1,30 +1,29 @@
-from typing import Optional, List
 from pathlib import Path
+from typing import List, Optional
 from uuid import uuid4
 
+from fastapi import HTTPException, UploadFile, status
 from sqlalchemy.orm import Session
-from fastapi import HTTPException, status, UploadFile
 
-from app.crud.device_crud import device_crud
-from app.crud.user_crud import user_crud
-from app.schemas.device import (
-    DeviceCreate,
-    DeviceReadDetail,
-    DeviceReadMinimal,
-    DeviceOwnerInline,
-)
-from app.models.user import User
-from app.models.device import Device
+from app.core.config import settings
 from app.core.roles import (
+    DEVICE_CREATORS,
     ROLE_ADMIN,
     ROLE_ADVISOR,
-    ROLE_TECHNICIAN,
     ROLE_CLIENT,
-    ROLE_COURIER,
-    DEVICE_CREATORS,
+    ROLE_TECHNICIAN,
     get_role_name,
 )
-from app.core.config import settings
+from app.crud.device_crud import device_crud
+from app.crud.user_crud import user_crud
+from app.models.device import Device
+from app.models.user import User
+from app.schemas.device import (
+    DeviceCreate,
+    DeviceOwnerInline,
+    DeviceReadDetail,
+    DeviceReadMinimal,
+)
 
 
 class DeviceService:
@@ -280,21 +279,14 @@ class DeviceService:
             )
 
         client = user_crud.get_by_id(db, client_id)
-        if (
-            not client
-            or client.state != 1
-            or not client.role
-            or client.role.name != ROLE_CLIENT
-        ):
+        if not client or client.state != 1 or not client.role or client.role.name != ROLE_CLIENT:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Client not found, inactive or not a CLIENT",
             )
 
         devices = (
-            db.query(Device)
-            .filter(Device.state == 1, Device.owner_user_id == client_id)
-            .all()
+            db.query(Device).filter(Device.state == 1, Device.owner_user_id == client_id).all()
         )
 
         return [self._to_minimal_schema(d) for d in devices]

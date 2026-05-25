@@ -1,6 +1,7 @@
 from typing import Sequence
-from sqlalchemy.orm import Session
+
 from sqlalchemy import desc
+from sqlalchemy.orm import Session
 
 from app.models.part_movement import PartMovement
 
@@ -32,7 +33,9 @@ class PartMovementCRUD:
         db.refresh(obj)
         return obj
 
-    def list_by_part(self, db: Session, part_id: int, *, limit: int | None = None) -> Sequence[PartMovement]:
+    def list_by_part(
+        self, db: Session, part_id: int, *, limit: int | None = None
+    ) -> Sequence[PartMovement]:
         query = (
             db.query(PartMovement)
             .filter(PartMovement.part_id == part_id)

@@ -1,13 +1,14 @@
+import io
 from datetime import datetime
 from typing import List, Optional
-import io
 
 from fastapi import APIRouter, Depends, Query, status
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
-from app.db.session import get_db
 from app.core.security_deps import get_current_user
+from app.crud.invoice_crud import invoice_crud
+from app.db.session import get_db
 from app.schemas.invoice import InvoiceCreateFromTicket, InvoiceRead, InvoiceUpdate
 from app.schemas.invoice_payment import (
     InvoicePaymentCreate,
@@ -16,8 +17,6 @@ from app.schemas.invoice_payment import (
 )
 from app.services.invoice_service import invoice_service
 from app.services.pdf_service import pdf_service
-from app.crud.invoice_crud import invoice_crud
-
 
 router = APIRouter(prefix="/invoices", tags=["Invoices"])
 
@@ -47,9 +46,7 @@ def get_invoice(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
-    return invoice_service.get_invoice(
-        db, current_user=current_user, invoice_id=invoice_id
-    )
+    return invoice_service.get_invoice(db, current_user=current_user, invoice_id=invoice_id)
 
 
 @router.patch("/{invoice_id}", response_model=InvoiceRead)
@@ -110,9 +107,7 @@ def register_payment(
         reference=payload.reference,
         paid_at=payload.paid_at,
     )
-    return invoice_service.register_payment(
-        db, current_user=current_user, payload=full_payload
-    )
+    return invoice_service.register_payment(db, current_user=current_user, payload=full_payload)
 
 
 @router.get("/{invoice_id}/payments", response_model=List[InvoicePaymentRead])
@@ -139,28 +134,33 @@ def download_invoice_pdf(
     invoice = invoice_crud.get(db, invoice_id)
     if not invoice or invoice.state != 1:
         from fastapi import HTTPException
+
         raise HTTPException(status_code=404, detail="Factura no encontrada")
-    
+
     # Verificar permisos usando el service
-    invoice_data_read = invoice_service.get_invoice(db, current_user=current_user, invoice_id=invoice_id)
-    
+    invoice_data_read = invoice_service.get_invoice(
+        db, current_user=current_user, invoice_id=invoice_id
+    )
+
     # Obtener datos del ticket y dispositivo
     ticket = invoice.ticket
     device = ticket.device if ticket else None
     owner = device.owner if device else None
-    
+
     # Obtener repuestos usados
     parts_list = []
     if ticket and ticket.ticket_parts:
         for tp in ticket.ticket_parts:
             if tp.state == 1 and tp.part:
-                parts_list.append({
-                    "name": tp.part.name,
-                    "qty": tp.qty,
-                    "unit_price": float(tp.unit_price_snapshot),
-                    "total": float(tp.total_cost),
-                })
-    
+                parts_list.append(
+                    {
+                        "name": tp.part.name,
+                        "qty": tp.qty,
+                        "unit_price": float(tp.unit_price_snapshot),
+                        "total": float(tp.total_cost),
+                    }
+                )
+
     # Preparar datos completos para el PDF
     invoice_data = {
         "invoice_number": invoice.invoice_number,
@@ -172,7 +172,7 @@ def download_invoice_pdf(
         "client_name": owner.full_name if owner else invoice_data_read.client_name,
         "client_email": owner.email if owner else None,
         "client_phone": owner.phone if owner else None,
-        "client_id_number": owner.id_number if owner and hasattr(owner, 'id_number') else None,
+        "client_id_number": owner.id_number if owner and hasattr(owner, "id_number") else None,
         # Ticket
         "ticket_tracking_code": ticket.tracking_code if ticket else None,
         "ticket_failure_desc": ticket.failure_desc if ticket else None,
@@ -195,13 +195,13 @@ def download_invoice_pdf(
         # Notas
         "notes": invoice.notes,
     }
-    
+
     pdf_bytes = pdf_service.generate_invoice_pdf(invoice_data)
-    
+
     return StreamingResponse(
         io.BytesIO(pdf_bytes),
         media_type="application/pdf",
         headers={
             "Content-Disposition": f'attachment; filename="factura_{invoice.invoice_number}.pdf"'
-        }
+        },
     )

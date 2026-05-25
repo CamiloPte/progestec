@@ -1,5 +1,7 @@
 from typing import Optional
+
 from app.schemas.common import BaseSchema, TimestampSchema
+
 
 class TicketAttachmentCreate(BaseSchema):
     ticket_id: int
@@ -12,6 +14,7 @@ class TicketAttachmentCreate(BaseSchema):
     file_size: Optional[int] = None
     note: Optional[str] = None
     uploaded_by: Optional[int] = None
+
 
 class TicketAttachmentRead(TimestampSchema):
     id: int

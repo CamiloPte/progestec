@@ -1,8 +1,10 @@
-from typing import Optional
 from datetime import datetime
+from typing import Optional
+
 from app.schemas.common import BaseSchema, TimestampSchema
 
-#claim code lo usaremos en general para los codigos de retiro de dispositivos o tickets
+
+# claim code lo usaremos en general para los codigos de retiro de dispositivos o tickets
 class ClaimCodeBase(BaseSchema):
     code: str
     ticket_id: Optional[int] = None
@@ -18,7 +20,7 @@ class ClaimCodeUpdate(BaseSchema):
     state: Optional[int] = None
 
 
-class ClaimCodeRead( TimestampSchema):
+class ClaimCodeRead(TimestampSchema):
     id: int
     code: str
     ticket_id: Optional[int] = None

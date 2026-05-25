@@ -1,8 +1,10 @@
 # app/schemas/dashboard.py
-from typing import List, Optional
 from datetime import datetime
 from decimal import Decimal
+from typing import List, Optional
+
 from pydantic import BaseModel
+
 from app.schemas.ticket import TicketReadMinimal
 
 
@@ -23,8 +25,10 @@ class DashboardSummary(BaseModel):
 
 # ---------- CLIENTE DASHBOARD ----------
 
+
 class ClientTicketSummary(BaseModel):
     """Resumen de un ticket para el cliente."""
+
     id: int
     tracking_code: str
     device_label: str
@@ -43,6 +47,7 @@ class ClientTicketSummary(BaseModel):
 
 class ClientDeviceSummary(BaseModel):
     """Resumen de dispositivo para el cliente."""
+
     id: int
     type: str
     brand: str
@@ -55,6 +60,7 @@ class ClientDeviceSummary(BaseModel):
 
 class ClientInvoiceSummary(BaseModel):
     """Resumen de factura para el cliente."""
+
     id: int
     invoice_number: str
     issue_date: datetime
@@ -67,6 +73,7 @@ class ClientInvoiceSummary(BaseModel):
 
 class ClientNotification(BaseModel):
     """Notificación/alerta para el cliente."""
+
     type: str  # 'approval_pending', 'ready_pickup', 'invoice_pending', 'info'
     icon: str  # Emoji o icono
     title: str
@@ -77,23 +84,24 @@ class ClientNotification(BaseModel):
 
 class ClientDashboardSummary(BaseModel):
     """Dashboard completo del cliente."""
+
     # Bienvenida
     client_name: str
-    
+
     # Contadores
     active_tickets: int
     devices_count: int
     pending_invoices: int
     pending_approvals: int
-    
+
     # Notificaciones importantes
     notifications: List[ClientNotification]
-    
+
     # Tickets activos (resumen)
     tickets: List[ClientTicketSummary]
-    
+
     # Dispositivos del cliente
     devices: List[ClientDeviceSummary]
-    
+
     # Facturas pendientes
     invoices: List[ClientInvoiceSummary]

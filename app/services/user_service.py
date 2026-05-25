@@ -1,20 +1,30 @@
 # app/services/user_service.py
 
-from typing import List, Optional, Tuple
-import secrets
 import asyncio
 import logging
+import secrets
+from typing import List, Optional, Tuple
 
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.models.user import User
-from app.schemas.user import (UserCreate,UserUpdate,UserReadMinimal,UserReadDetail,)
-from app.crud.user_crud import user_crud
-from app.crud.role_crud import role_crud
-from app.core.roles import (ROLE_ADMIN,ROLE_ADVISOR,ROLE_TECHNICIAN,ROLE_CLIENT,ROLE_COURIER,get_role_name,)
 from app.core.config import settings
-
+from app.core.roles import (
+    ROLE_ADMIN,
+    ROLE_ADVISOR,
+    ROLE_CLIENT,
+    ROLE_TECHNICIAN,
+    get_role_name,
+)
+from app.crud.role_crud import role_crud
+from app.crud.user_crud import user_crud
+from app.models.user import User
+from app.schemas.user import (
+    UserCreate,
+    UserReadDetail,
+    UserReadMinimal,
+    UserUpdate,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -79,11 +89,7 @@ class UserService:
 
         if role:
             role_upper = role.upper()
-            users = [
-                u
-                for u in users
-                if u.role is not None and u.role.name.upper() == role_upper
-            ]
+            users = [u for u in users if u.role is not None and u.role.name.upper() == role_upper]
 
         if search:
             q = search.lower().strip()
@@ -272,7 +278,7 @@ class UserService:
         Crea un cliente rápido con contraseña aleatoria y must_change_password=True.
         Reutiliza cliente activo si ya existe con el mismo email.
         Solo ADMIN / ADVISOR.
-        
+
         Returns:
             Tuple[UserReadDetail, bool]: (usuario, es_nuevo)
             - es_nuevo=True si se creó un nuevo usuario
@@ -320,7 +326,7 @@ class UserService:
         )
 
         return self._to_detail(created), True
-    
+
     def _send_welcome_email(
         self,
         email: str,
@@ -334,9 +340,9 @@ class UserService:
         """
         try:
             from app.services.email_service import email_service
-            
+
             portal_url = f"{settings.FRONTEND_URL}/client"
-            
+
             # Ejecutar en loop async
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
@@ -352,7 +358,7 @@ class UserService:
                 )
             finally:
                 loop.close()
-                
+
         except Exception as e:
             # Log error pero no fallar la creación del usuario
             logger.error(f"Error sending welcome email to {email}: {e}")
@@ -372,11 +378,7 @@ class UserService:
         self._ensure_admin_or_advisor(current_user)
 
         users = db.query(User).filter(User.state == 1).all()
-        technicians = [
-            u
-            for u in users
-            if u.role is not None and u.role.name == ROLE_TECHNICIAN
-        ]
+        technicians = [u for u in users if u.role is not None and u.role.name == ROLE_TECHNICIAN]
 
         return [self._to_minimal(u) for u in technicians]
 
@@ -394,9 +396,7 @@ class UserService:
         self._ensure_admin_or_advisor(current_user)
 
         users = db.query(User).filter(User.state == 1).all()
-        clients = [
-            u for u in users if u.role is not None and u.role.name == ROLE_CLIENT
-        ]
+        clients = [u for u in users if u.role is not None and u.role.name == ROLE_CLIENT]
 
         return [self._to_minimal(u) for u in clients]
 

@@ -3,8 +3,10 @@
 
 from functools import lru_cache
 from pathlib import Path
+
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
 
 class Settings(BaseSettings):
     # === Seguridad ===
@@ -36,14 +38,14 @@ class Settings(BaseSettings):
     MAIL_SSL_TLS: bool = False
     MAIL_USE_CREDENTIALS: bool = True
     MAIL_VALIDATE_CERTS: bool = True
-    
+
     # === Configuración de la empresa ===
     COMPANY_NAME: str = "ProGesTec"
     COMPANY_PHONE: str = "+57 301 255-4106"
     COMPANY_EMAIL: str = ""
     COMPANY_ADDRESS: str = "Barranquilla, Colombia"
     COMPANY_WEBSITE: str = "https://progestec.com"
-    
+
     # === Frontend URL (para links en emails) ===
     FRONTEND_URL: str = "http://localhost:4200"
 
@@ -55,10 +57,7 @@ class Settings(BaseSettings):
     def cors_origins_list(self) -> list[str]:
         return [o.strip() for o in self.CORS_ORIGINS.split(",") if o.strip()]
 
-    model_config = SettingsConfigDict(
-        env_file=".env",
-        env_file_encoding="utf-8"
-    )
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -68,14 +67,16 @@ class Settings(BaseSettings):
                 f"@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
             )
         Path(self.MEDIA_ROOT).mkdir(parents=True, exist_ok=True)
-    
+
     @property
     def mail_enabled(self) -> bool:
         """Verifica si el email está configurado correctamente"""
         return bool(self.MAIL_USERNAME and self.MAIL_PASSWORD)
 
+
 @lru_cache()
 def get_settings() -> Settings:
     return Settings()
+
 
 settings = get_settings()

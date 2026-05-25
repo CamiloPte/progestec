@@ -1,9 +1,9 @@
 # Relación entre tickets y repuestos: qué parte se usó, cuánta, a qué costo y quién la agregó.
-from sqlalchemy import Column, Integer, Numeric, ForeignKey, UniqueConstraint
+from sqlalchemy import Column, ForeignKey, Integer, Numeric, UniqueConstraint
 from sqlalchemy.orm import relationship
 
 from app.db.base_class import Base
-from app.models.mixins import TimestampStateMixin, PKMixin
+from app.models.mixins import PKMixin, TimestampStateMixin
 
 
 class TicketPart(Base, PKMixin, TimestampStateMixin):

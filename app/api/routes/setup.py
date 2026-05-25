@@ -1,12 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.db.session import get_db
-from app.services.bootstrap_service import bootstrap_service
 from app.core.security_deps import get_current_user
+from app.db.session import get_db
 from app.models.user import User
+from app.services.bootstrap_service import bootstrap_service
 
 router = APIRouter(prefix="/setup", tags=["setup"])
+
 
 @router.post("/bootstrap")
 def run_bootstrap(
@@ -22,7 +23,4 @@ def run_bootstrap(
         )
 
     result = bootstrap_service.bootstrap(db)
-    return {
-        "message": "bootstrap ok",
-        "result": result
-    }
+    return {"message": "bootstrap ok", "result": result}

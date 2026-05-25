@@ -1,13 +1,14 @@
-from typing import Optional
-from datetime import datetime
 from decimal import Decimal
+from typing import Optional
+
 from app.schemas.common import BaseSchema, TimestampSchema
+
 
 class TransactionBase(BaseSchema):
     invoice_id: Optional[int] = None
-    type: str             # INCOME | EXPENSE
+    type: str  # INCOME | EXPENSE
     amount: Decimal
-    method: str           # CASH | CARD | TRANSFER | OTHER
+    method: str  # CASH | CARD | TRANSFER | OTHER
     created_by: Optional[int] = None
 
 

@@ -1,4 +1,4 @@
-from datetime import datetime, date
+from datetime import date, datetime
 from typing import Optional, Sequence
 
 from fastapi import HTTPException, status
@@ -12,12 +12,11 @@ from app.models.part import Part
 from app.models.part_movement import PartMovement
 from app.models.user import User
 from app.schemas.part import (
-    PartMovementCreate,
     InventorySummary,
     PartCreate,
+    PartMovementCreate,
     PartUpdate,
 )
-
 
 # Roles permitidos para acceder/usar inventario (ver partes, registrar movimientos, etc.)
 ALLOWED_ROLES_INVENTORY = (ROLE_ADMIN, ROLE_ADVISOR, ROLE_TECHNICIAN)
@@ -102,7 +101,7 @@ class PartService:
         )
         movement_map = {row[0]: row[1] for row in movement_rows}
         for part in parts:
-            setattr(part, "last_movement_at", movement_map.get(part.id))
+            part.last_movement_at = movement_map.get(part.id)
 
         return parts
 
@@ -130,9 +129,7 @@ class PartService:
     def get_summary(self, db: Session, *, user: User) -> InventorySummary:
         self._ensure_can_use_inventory(user)
 
-        total_stock = (
-            db.query(func.coalesce(func.sum(Part.stock_current), 0)).scalar() or 0
-        )
+        total_stock = db.query(func.coalesce(func.sum(Part.stock_current), 0)).scalar() or 0
         alerts = (
             db.query(func.count(Part.id))
             .filter(Part.state == 1, Part.stock_current <= Part.stock_min)
@@ -140,9 +137,7 @@ class PartService:
             or 0
         )
         critical = (
-            db.query(func.count(Part.id))
-            .filter(Part.state == 1, Part.stock_current <= 0)
-            .scalar()
+            db.query(func.count(Part.id)).filter(Part.state == 1, Part.stock_current <= 0).scalar()
             or 0
         )
         today = date.today()
@@ -190,9 +185,7 @@ class PartService:
 
         quantity = payload.quantity
         if quantity <= 0:
-            raise HTTPException(
-                status_code=400, detail="La cantidad debe ser mayor que 0"
-            )
+            raise HTTPException(status_code=400, detail="La cantidad debe ser mayor que 0")
 
         # Regla de requires_approval: aplica solo a salidas
         if (
@@ -233,7 +226,7 @@ class PartService:
         )
 
         part_crud.update_stock(db, part, new_stock=new_stock)
-        setattr(part, "last_movement_at", movement.movement_at)
+        part.last_movement_at = movement.movement_at
 
         # Mantengo la firma original: devolver el repuesto actualizado
         return part

@@ -1,43 +1,40 @@
 # app/services/ticket_service.py
-from typing import List, Optional
 from datetime import datetime
 from decimal import Decimal
-import asyncio
+from typing import List, Optional
 
+from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
-from fastapi import HTTPException, status, BackgroundTasks
 
-from app.crud.ticket_crud import ticket_crud  # :contentReference[oaicite:1]{index=1}
-from app.crud.user_crud import user_crud
-from app.crud.ticket_status_crud import ticket_status_crud
-from app.crud.part_crud import part_crud  # :contentReference[oaicite:2]{index=2}
-from app.crud.invoice_crud import invoice_crud
-from app.models.user import User
-from app.models.ticket_part import TicketPart
-from app.schemas.ticket import (
-    TicketCreate,
-    TicketUpdate,
-    TicketReadMinimal,
-    TicketReadDetail,
-    TicketOwnerInfo,
-)
-from app.schemas.ticket_issue import TicketIssueRead
-from app.schemas.ticket_history import TicketHistoryCreate, TicketHistoryRead
-from app.schemas.ticket_attachment import TicketAttachmentRead
-from app.schemas.ticket_part import TicketPartCreate, TicketPartRead
-from app.schemas.part import PartMovementCreate
-from app.services.ticket_attachment_service import ticket_attachment_service
-from app.services.part_service import part_service
 from app.core.roles import (
     ROLE_ADMIN,
     ROLE_ADVISOR,
-    ROLE_TECHNICIAN,
     ROLE_CLIENT,
-    ROLE_COURIER,
+    ROLE_TECHNICIAN,
     TICKET_CREATORS,
     get_role_name,
 )
 from app.core.ticket_status_transitions import is_valid_transition
+from app.crud.invoice_crud import invoice_crud
+from app.crud.part_crud import part_crud  # :contentReference[oaicite:2]{index=2}
+from app.crud.ticket_crud import ticket_crud  # :contentReference[oaicite:1]{index=1}
+from app.crud.ticket_status_crud import ticket_status_crud
+from app.crud.user_crud import user_crud
+from app.models.ticket_part import TicketPart
+from app.models.user import User
+from app.schemas.part import PartMovementCreate
+from app.schemas.ticket import (
+    TicketCreate,
+    TicketOwnerInfo,
+    TicketReadDetail,
+    TicketReadMinimal,
+    TicketUpdate,
+)
+from app.schemas.ticket_attachment import TicketAttachmentRead
+from app.schemas.ticket_history import TicketHistoryCreate, TicketHistoryRead
+from app.schemas.ticket_issue import TicketIssueRead
+from app.schemas.ticket_part import TicketPartCreate, TicketPartRead
+from app.services.part_service import part_service
 
 
 class TicketService:
@@ -58,9 +55,7 @@ class TicketService:
                     if len(db_ticket.failure_desc) > 60
                     else db_ticket.failure_desc
                 )
-                device_label = (
-                    f"{base_label} – {short_failure}" if base_label else short_failure
-                )
+                device_label = f"{base_label} – {short_failure}" if base_label else short_failure
             else:
                 device_label = base_label or f"Dispositivo #{db_ticket.device_id}"
         return device_label
@@ -113,9 +108,7 @@ class TicketService:
         detail = TicketReadDetail.model_validate(db_ticket, from_attributes=True)
         detail.device_label = self._build_device_label(db_ticket)
         detail.assignee_name = (
-            db_ticket.assignee.full_name or db_ticket.assignee.email
-            if db_ticket.assignee
-            else None
+            db_ticket.assignee.full_name or db_ticket.assignee.email if db_ticket.assignee else None
         )
         detail.issues = [
             TicketIssueRead.model_validate(i, from_attributes=True)
@@ -142,9 +135,7 @@ class TicketService:
         minimal = TicketReadMinimal.model_validate(db_ticket, from_attributes=True)
         minimal.device_label = self._build_device_label(db_ticket)
         minimal.assignee_name = (
-            db_ticket.assignee.full_name or db_ticket.assignee.email
-            if db_ticket.assignee
-            else None
+            db_ticket.assignee.full_name or db_ticket.assignee.email if db_ticket.assignee else None
         )
         minimal.status_code = db_ticket.status.code if db_ticket.status else None
         minimal.status_name = db_ticket.status.name if db_ticket.status else None
@@ -171,7 +162,6 @@ class TicketService:
         search: Optional[str] = None,
         device_type: Optional[str] = None,
     ) -> List[TicketReadMinimal]:
-
         role = get_role_name(current_user)
 
         if role in (ROLE_ADMIN, ROLE_ADVISOR):
@@ -193,22 +183,16 @@ class TicketService:
 
         if status_codes:
             codes = {c.upper() for c in status_codes}
-            tickets = [
-                t for t in tickets if t.status and t.status.code.upper() in codes
-            ]
+            tickets = [t for t in tickets if t.status and t.status.code.upper() in codes]
 
         if device_type:
             dt = device_type.upper()
             tickets = [
-                t
-                for t in tickets
-                if t.device and t.device.type and t.device.type.upper() == dt
+                t for t in tickets if t.device and t.device.type and t.device.type.upper() == dt
             ]
 
         if from_date:
-            tickets = [
-                t for t in tickets if t.created_at and t.created_at >= from_date
-            ]
+            tickets = [t for t in tickets if t.created_at and t.created_at >= from_date]
         if to_date:
             tickets = [t for t in tickets if t.created_at and t.created_at <= to_date]
 
@@ -218,9 +202,7 @@ class TicketService:
             tickets = [t for t in tickets if t.assignee_user_id is None]
 
         tickets.sort(key=lambda t: t.created_at or datetime.min, reverse=True)
-        result: List[TicketReadMinimal] = [
-            self._map_ticket_minimal(t) for t in tickets
-        ]
+        result: List[TicketReadMinimal] = [self._map_ticket_minimal(t) for t in tickets]
 
         if search:
             q = search.lower().strip()
@@ -245,7 +227,6 @@ class TicketService:
         ticket_id: int,
         current_user: User,
     ) -> TicketReadDetail:
-
         db_ticket = ticket_crud.get_by_id(db, ticket_id)
         if not db_ticket or db_ticket.state != 1:
             raise HTTPException(
@@ -286,7 +267,6 @@ class TicketService:
         current_user: User,
         data: TicketCreate,
     ) -> TicketReadDetail:
-
         role = get_role_name(current_user)
         if role not in TICKET_CREATORS:
             raise HTTPException(
@@ -296,11 +276,7 @@ class TicketService:
 
         if data.assignee_user_id is not None:
             assignee = user_crud.get_by_id(db, data.assignee_user_id)
-            if (
-                not assignee
-                or not assignee.role
-                or assignee.role.name != ROLE_TECHNICIAN
-            ):
+            if not assignee or not assignee.role or assignee.role.name != ROLE_TECHNICIAN:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail="assignee_user_id must belong to a TECHNICIAN user",
@@ -317,15 +293,15 @@ class TicketService:
         ticket_crud.add_history(db, hist)
 
         db_ticket = ticket_crud.commit(db, db_ticket)
-        
+
         # Enviar notificación de ticket recibido
         if db_ticket.status and db_ticket.status.code:
             self._send_status_change_notification(
                 db_ticket,
                 "",  # No hay estado anterior
-                db_ticket.status.code.upper()
+                db_ticket.status.code.upper(),
             )
-        
+
         return self.get_ticket_detail(db, db_ticket.id, current_user)
 
     # -------- update ticket --------
@@ -336,7 +312,6 @@ class TicketService:
         ticket_id: int,
         data: TicketUpdate,
     ) -> TicketReadDetail:
-
         db_ticket = ticket_crud.get_by_id(db, ticket_id)
         if not db_ticket or db_ticket.state != 1:
             raise HTTPException(
@@ -353,17 +328,17 @@ class TicketService:
             and db_ticket.assignee_user_id is None
             and data.assignee_user_id == current_user.id
         )
-        
+
         # Detectar si técnico intenta desasignarse
         is_self_unassign_attempt = (
             role == ROLE_TECHNICIAN
             and db_ticket.assignee_user_id == current_user.id
             and data.assignee_user_id is None
         )
-        
+
         # Estados donde el técnico puede desasignarse
         early_status_codes = {"RECEIVED", "DIAGNOSING"}
-        current_status_code = (db_ticket.status.code.upper() if db_ticket.status else "RECEIVED")
+        current_status_code = db_ticket.status.code.upper() if db_ticket.status else "RECEIVED"
 
         if role == ROLE_ADMIN:
             allowed = True
@@ -406,11 +381,7 @@ class TicketService:
             new_assignee_id = new_data["assignee_user_id"]
             if new_assignee_id is not None:
                 assignee = user_crud.get_by_id(db, new_assignee_id)
-                if (
-                    not assignee
-                    or not assignee.role
-                    or assignee.role.name != ROLE_TECHNICIAN
-                ):
+                if not assignee or not assignee.role or assignee.role.name != ROLE_TECHNICIAN:
                     raise HTTPException(
                         status_code=status.HTTP_400_BAD_REQUEST,
                         detail="assignee_user_id must belong to a TECHNICIAN user",
@@ -419,7 +390,7 @@ class TicketService:
         status_changed = False
         new_status_obj = None
         old_status_code = db_ticket.status.code.upper() if db_ticket.status else "RECEIVED"
-        
+
         if "status_id" in new_data:
             new_status_id = new_data["status_id"]
             if new_status_id is not None and new_status_id != old_status_id:
@@ -429,7 +400,7 @@ class TicketService:
                         status_code=status.HTTP_400_BAD_REQUEST,
                         detail="Invalid status_id",
                     )
-                
+
                 # Validar transición de estado
                 new_status_code = (new_status_obj.code or "").upper()
                 is_valid, error_msg = is_valid_transition(old_status_code, new_status_code, role)
@@ -438,7 +409,7 @@ class TicketService:
                         status_code=status.HTTP_400_BAD_REQUEST,
                         detail=error_msg,
                     )
-                
+
                 status_changed = True
 
         sanitized_payload = TicketUpdate(**new_data)
@@ -482,13 +453,11 @@ class TicketService:
         # Enviar notificación por email si cambió el estado
         if status_changed and new_status_obj:
             self._send_status_change_notification(
-                db_ticket,
-                old_status_code,
-                new_status_obj.code.upper()
+                db_ticket, old_status_code, new_status_obj.code.upper()
             )
 
         return self.get_ticket_detail(db, db_ticket.id, current_user)
-    
+
     def _send_status_change_notification(
         self,
         ticket,
@@ -501,14 +470,14 @@ class TicketService:
         """
         try:
             from app.services.ticket_notification_service import ticket_notification_service
+
             ticket_notification_service.send_status_notification_sync(
-                ticket,
-                old_status_code,
-                new_status_code
+                ticket, old_status_code, new_status_code
             )
         except Exception as e:
             # Log error pero no fallar la operación principal
             import logging
+
             logging.getLogger(__name__).error(
                 f"Error sending notification for ticket {ticket.tracking_code}: {e}"
             )
@@ -548,9 +517,7 @@ class TicketService:
             )
 
         unit_price_snapshot: Decimal = (
-            data.unit_price_snapshot
-            if data.unit_price_snapshot is not None
-            else db_part.unit_price
+            data.unit_price_snapshot if data.unit_price_snapshot is not None else db_part.unit_price
         )
 
         movement_payload = PartMovementCreate(
@@ -661,11 +628,11 @@ class TicketService:
         existing = invoice_crud.get_by_ticket_id(db, db_ticket.id)
         if existing:
             return  # Ya tiene factura, no crear otra
-        
+
         # Verificar que tenga cliente
         if not db_ticket.device or not db_ticket.device.owner:
             return  # Sin cliente, no se puede crear factura
-        
+
         # Calcular costo de repuestos
         parts_cost = Decimal("0")
         parts = (
@@ -675,13 +642,13 @@ class TicketService:
         )
         for tp in parts:
             parts_cost += Decimal(str(tp.total_cost or 0))
-        
+
         # Generar número de factura
         base = db_ticket.tracking_code or f"TKT{db_ticket.id}"
         safe = "".join(ch for ch in base if ch.isalnum()).upper() or f"TKT{db_ticket.id}"
         date_part = datetime.utcnow().strftime("%Y%m%d")
         invoice_number = f"INV-{date_part}-{safe}"
-        
+
         # Crear factura borrador (DRAFT)
         invoice_data = {
             "ticket_id": db_ticket.id,
@@ -700,7 +667,7 @@ class TicketService:
             "created_by_id": current_user.id,
             "notes": "Factura generada automáticamente al marcar equipo como listo.",
         }
-        
+
         invoice_crud.create(db, invoice_data)
 
 

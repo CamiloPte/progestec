@@ -1,7 +1,9 @@
-from sqlalchemy import Column, String, Numeric, Integer, Text, Boolean
+from sqlalchemy import Boolean, Column, Integer, Numeric, String, Text
 from sqlalchemy.orm import relationship
+
 from app.db.base_class import Base
-from app.models.mixins import TimestampStateMixin, PKMixin
+from app.models.mixins import PKMixin, TimestampStateMixin
+
 
 class Part(Base, PKMixin, TimestampStateMixin):
     __tablename__ = "parts"
@@ -19,6 +21,15 @@ class Part(Base, PKMixin, TimestampStateMixin):
     stock_min = Column(Integer, nullable=False, default=0)
     requires_approval = Column(Boolean, nullable=False, default=False)
 
-    ticket_parts = relationship("TicketPart",back_populates="part",lazy="selectin",)
-    movements = relationship("PartMovement",back_populates="part",cascade="all,delete",passive_deletes=True,)
+    ticket_parts = relationship(
+        "TicketPart",
+        back_populates="part",
+        lazy="selectin",
+    )
+    movements = relationship(
+        "PartMovement",
+        back_populates="part",
+        cascade="all,delete",
+        passive_deletes=True,
+    )
     expenses = relationship("Expense", back_populates="part")
