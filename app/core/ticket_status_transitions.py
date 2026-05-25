@@ -9,6 +9,11 @@ Casos especiales:
 - CANCELLED: Se puede cancelar desde RECEIVED, DIAGNOSING, WAITING_APPROVAL, REPAIRING
 - No se puede retroceder de estado (excepto casos autorizados por ADMIN)
 - El cliente puede aprobar (→ REPAIRING) o rechazar (→ CANCELLED) desde WAITING_APPROVAL
+
+Notificaciones:
+    Las transiciones marcadas con `# TODO(notify): ...` deben disparar
+    un email al cliente. Ver `.kiro/steering/notifications.md` para la
+    matriz completa de eventos → mensajes.
 """
 
 from typing import Dict, Optional, Set
@@ -45,8 +50,9 @@ ADMIN_ONLY_TRANSITIONS: Dict[str, Set[str]] = {
 }
 
 # Transiciones permitidas por rol
-# El técnico no puede marcar como DELIVERED ni CLOSED (eso lo hace el asesor)
-# El cliente solo puede aprobar o rechazar cotizaciones (WAITING_APPROVAL → REPAIRING/CANCELLED)
+# - El técnico no puede marcar como DELIVERED ni CLOSED (eso lo hace el asesor).
+# - El cliente solo puede aprobar o rechazar la cotización; cualquier otra
+#   transición la deciden los roles internos.
 ROLE_TRANSITION_RESTRICTIONS: Dict[str, Set[str]] = {
     ROLE_TECHNICIAN: {
         "DIAGNOSING",
@@ -66,6 +72,18 @@ ROLE_TRANSITION_RESTRICTIONS: Dict[str, Set[str]] = {
     },
     ROLE_CLIENT: {"REPAIRING", "CANCELLED"},  # Solo puede aprobar o rechazar cotización
     ROLE_ADMIN: None,  # None = sin restricciones
+}
+
+# Reglas adicionales para roles con flujos muy acotados.
+# Cada entrada define: rol -> {estado_origen: {estados_destino_permitidos}}.
+# Si un rol no aparece aquí, se valida solo con ROLE_TRANSITION_RESTRICTIONS.
+ROLE_ALLOWED_FROM: Dict[str, Dict[str, Set[str]]] = {
+    # El cliente solo puede actuar cuando hay un presupuesto pendiente.
+    # Aprobar  → REPAIRING
+    # Rechazar → CANCELLED
+    ROLE_CLIENT: {
+        "WAITING_APPROVAL": {"REPAIRING", "CANCELLED"},
+    },
 }
 
 
@@ -106,10 +124,22 @@ def is_valid_transition(
             f"No se puede cambiar de '{current}' a '{new}'. Estados permitidos: {', '.join(allowed_next) or 'ninguno'}",
         )
 
-    # Verificar restricciones por rol
+    # Verificar restricciones por rol (set de estados destino permitidos).
     role_allowed = ROLE_TRANSITION_RESTRICTIONS.get(role)
     if role_allowed is not None and new not in role_allowed:
         return False, f"Tu rol no permite cambiar a estado '{new}'"
+
+    # Restricciones adicionales: algunos roles solo pueden actuar desde
+    # estados de origen específicos (ej. CLIENT solo desde WAITING_APPROVAL).
+    role_from = ROLE_ALLOWED_FROM.get(role)
+    if role_from is not None:
+        allowed_targets_from_current = role_from.get(current, set())
+        if new not in allowed_targets_from_current:
+            return (
+                False,
+                f"Tu rol solo puede cambiar el estado desde "
+                f"{', '.join(role_from.keys()) or 'ningún estado'}",
+            )
 
     return True, ""
 
@@ -136,5 +166,10 @@ def get_allowed_transitions(
     role_allowed = ROLE_TRANSITION_RESTRICTIONS.get(role)
     if role_allowed is not None:
         allowed = allowed & role_allowed
+
+    # Si el rol tiene restricciones por estado de origen, aplicarlas también.
+    role_from = ROLE_ALLOWED_FROM.get(role)
+    if role_from is not None:
+        allowed = allowed & role_from.get(current, set())
 
     return allowed
