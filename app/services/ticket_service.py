@@ -438,6 +438,11 @@ class TicketService:
             ticket_crud.add_history(db, hist)
             history_note = None
 
+            # TODO(notify): aquí se engancha el envío de email al cliente
+            # según la transición (old_status_code -> status_code).
+            # Matriz completa en .kiro/steering/notifications.md.
+            # Implementar como BackgroundTask para no bloquear la respuesta.
+
         db_ticket = ticket_crud.commit(db, db_ticket)
 
         if history_note:
