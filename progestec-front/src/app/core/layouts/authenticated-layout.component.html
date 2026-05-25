@@ -1,0 +1,64 @@
+<ng-container *ngIf="user$ | async as user; else loadingTemplate">
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand-group">
+        <div class="brand-icon">PT</div>
+        <div>
+          <p class="brand-name">ProGesTec</p>
+          <small class="brand-tag">Service desk</small>
+        </div>
+      </div>
+
+      <div class="user-card">
+        <div class="avatar">{{ getUserInitial(user) }}</div>
+        <div>
+          <p class="user-name">{{ user.full_name || user.email }}</p>
+          <p class="user-role">{{ user.role_name || 'Sin rol asignado' }}</p>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <a
+          *ngFor="let link of links"
+          [routerLink]="link.path"
+          routerLinkActive="active"
+          class="nav-link"
+          [class.disabled]="link.disabled"
+          [attr.aria-disabled]="link.disabled ? true : null"
+          (click)="link.disabled && $event.preventDefault()"
+        >
+          <span class="nav-icon">{{ link.icon }}</span>
+          <span>{{ link.label }}</span>
+        </a>
+      </nav>
+
+      <button type="button" class="logout-btn" (click)="logout()">
+        Cerrar sesión
+      </button>
+
+      <p class="sidebar-footer">© {{ currentYear }} ProGesTec</p>
+    </aside>
+
+    <main class="shell-main">
+      <ng-content></ng-content>
+    </main>
+  </div>
+
+  <!-- Modal de inactividad -->
+  <div class="idle-backdrop" *ngIf="showIdleModal">
+    <div class="idle-modal">
+      <h3>Sesión inactiva</h3>
+      <p>Has estado inactivo. La sesión se cerrará pronto.</p>
+      <div class="idle-actions">
+        <button type="button" class="btn" (click)="logout()">Cerrar sesión</button>
+        <button type="button" class="btn btn-primary" (click)="stayActive()">Seguir</button>
+      </div>
+    </div>
+  </div>
+</ng-container>
+
+<ng-template #loadingTemplate>
+  <div class="layout-loading">
+    <div class="spinner-border" role="status"></div>
+  </div>
+</ng-template>

@@ -1,0 +1,367 @@
+<app-authenticated-layout>
+  <div class="finance-dashboard">
+    <!-- Header -->
+    <div class="page-header">
+      <div class="header-content">
+        <h1>Dashboard Financiero</h1>
+        <p class="subtitle">Resumen de ingresos, gastos y rendimiento del negocio</p>
+      </div>
+      <div class="header-actions">
+        <a routerLink="/finanzas/facturas" class="action-btn secondary">
+          <span class="action-icon">📄</span>
+          <span class="action-text">Ver Facturas</span>
+        </a>
+        <a routerLink="/finanzas/gastos" class="action-btn secondary">
+          <span class="action-icon">📋</span>
+          <span class="action-text">Ver Gastos</span>
+        </a>
+        <button class="action-btn primary" (click)="openExpenseModal()">
+          <span class="action-icon">+</span>
+          <span class="action-text">Registrar Gasto</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Filtros de período -->
+    <div class="filters-card">
+      <div class="filters-row">
+        <div class="filter-group">
+          <label>Desde</label>
+          <input type="date" [(ngModel)]="filters.from_date" />
+        </div>
+        <div class="filter-group">
+          <label>Hasta</label>
+          <input type="date" [(ngModel)]="filters.to_date" />
+        </div>
+        <button class="btn btn-secondary" (click)="applyFilters()">Aplicar</button>
+      </div>
+    </div>
+
+    <!-- Loading / Error -->
+    @if (loading) {
+      <div class="loading-state">
+        <div class="spinner"></div>
+        <p>Cargando datos financieros...</p>
+      </div>
+    } @else if (error) {
+      <div class="error-state">
+        <p>{{ error }}</p>
+        <button class="btn btn-secondary" (click)="loadSummary()">Reintentar</button>
+      </div>
+    } @else if (summary) {
+      <!-- Métricas principales -->
+      <div class="metrics-grid">
+        <!-- Total Facturado -->
+        <div class="metric-card">
+          <div class="metric-icon invoiced">
+            <span class="material-icon">receipt_long</span>
+          </div>
+          <div class="metric-content">
+            <span class="metric-label">Total Facturado</span>
+            <span class="metric-value">${{ summary.total_invoiced | number: '1.0-0' }}</span>
+            <span class="metric-sub">{{ summary.invoices_count }} facturas</span>
+          </div>
+        </div>
+
+        <!-- Total Cobrado -->
+        <div class="metric-card">
+          <div class="metric-icon collected">
+            <span class="material-icon">payments</span>
+          </div>
+          <div class="metric-content">
+            <span class="metric-label">Total Cobrado</span>
+            <span class="metric-value">${{ summary.total_collected | number: '1.0-0' }}</span>
+            <span class="metric-sub">{{ summary.invoices_paid }} pagadas</span>
+          </div>
+        </div>
+
+        <!-- Pendiente por Cobrar -->
+        <div class="metric-card">
+          <div class="metric-icon pending">
+            <span class="material-icon">schedule</span>
+          </div>
+          <div class="metric-content">
+            <span class="metric-label">Pendiente por Cobrar</span>
+            <span class="metric-value">${{ summary.total_pending | number: '1.0-0' }}</span>
+            <span class="metric-sub">{{ summary.invoices_pending }} pendientes</span>
+          </div>
+        </div>
+
+        <!-- Total Gastos -->
+        <div class="metric-card">
+          <div class="metric-icon expenses">
+            <span class="material-icon">trending_down</span>
+          </div>
+          <div class="metric-content">
+            <span class="metric-label">Total Gastos</span>
+            <span class="metric-value">${{ summary.total_expenses | number: '1.0-0' }}</span>
+            <span class="metric-sub">{{ summary.expenses_count }} registros</span>
+          </div>
+        </div>
+
+        <!-- Ganancia Neta -->
+        <div class="metric-card highlight">
+          <div class="metric-icon profit">
+            <span class="material-icon">trending_up</span>
+          </div>
+          <div class="metric-content">
+            <span class="metric-label">Ganancia Neta</span>
+            <span class="metric-value" [class.positive]="summary.net_profit > 0" [class.negative]="summary.net_profit < 0">
+              ${{ summary.net_profit | number: '1.0-0' }}
+            </span>
+            <span class="metric-sub">Margen: {{ summary.profit_margin | number: '1.1-1' }}%</span>
+          </div>
+        </div>
+
+        <!-- Margen Bruto -->
+        <div class="metric-card">
+          <div class="metric-icon gross">
+            <span class="material-icon">account_balance</span>
+          </div>
+          <div class="metric-content">
+            <span class="metric-label">Margen Bruto</span>
+            <span class="metric-value">${{ summary.gross_profit | number: '1.0-0' }}</span>
+            <span class="metric-sub">Facturado - Costo repuestos</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Segunda fila: Costos y Tendencias -->
+      <div class="content-grid">
+        <!-- Desglose de Costos -->
+        <div class="section-card">
+          <h3>Desglose de Costos</h3>
+          <div class="cost-breakdown">
+            <div class="cost-item">
+              <span class="cost-label">Costo de Repuestos</span>
+              <span class="cost-value">${{ summary.total_parts_cost | number: '1.0-0' }}</span>
+            </div>
+            <div class="cost-item">
+              <span class="cost-label">Mano de Obra Cobrada</span>
+              <span class="cost-value">${{ summary.total_labor_cost | number: '1.0-0' }}</span>
+            </div>
+            <div class="cost-item">
+              <span class="cost-label">Gastos Operativos</span>
+              <span class="cost-value">${{ summary.total_expenses | number: '1.0-0' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Gastos por Categoría -->
+        <div class="section-card">
+          <h3>Gastos por Categoría</h3>
+          @if (summary.expenses_by_category.length === 0) {
+            <div class="empty-state">
+              <p>No hay gastos registrados en este período</p>
+            </div>
+          } @else {
+            <div class="category-list">
+              @for (cat of summary.expenses_by_category; track cat.category_id) {
+                <div class="category-item">
+                  <div class="category-info">
+                    <span class="category-name">{{ cat.category_name }}</span>
+                    <span class="category-count">{{ cat.count }} gastos</span>
+                  </div>
+                  <div class="category-amount">
+                    <span class="amount">${{ cat.total | number: '1.0-0' }}</span>
+                    <div class="percentage-bar">
+                      <div class="percentage-fill" [style.width.%]="cat.percentage"></div>
+                    </div>
+                    <span class="percentage">{{ cat.percentage | number: '1.1-1' }}%</span>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </div>
+
+        <!-- Top Clientes -->
+        <div class="section-card">
+          <h3>Top Clientes</h3>
+          @if (summary.top_clients.length === 0) {
+            <div class="empty-state">
+              <p>No hay facturas en este período</p>
+            </div>
+          } @else {
+            <div class="clients-list">
+              @for (client of summary.top_clients; track client.client_id; let i = $index) {
+                <div class="client-item">
+                  <span class="client-rank">{{ i + 1 }}</span>
+                  <div class="client-info">
+                    <span class="client-name">{{ client.client_name }}</span>
+                    <span class="client-invoices">{{ client.invoices_count }} facturas</span>
+                  </div>
+                  <span class="client-amount">${{ client.total_billed | number: '1.0-0' }}</span>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Tendencias Mensuales -->
+      @if (summary.monthly_trend.length > 0) {
+        <div class="section-card full-width">
+          <h3>Tendencia Mensual</h3>
+          <div class="trend-table">
+            <table>
+              <thead>
+                <tr>
+                  <th>Período</th>
+                  <th>Ingresos</th>
+                  <th>Gastos</th>
+                  <th>Neto</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (month of summary.monthly_trend; track month.period) {
+                  <tr>
+                    <td class="period">{{ month.period }}</td>
+                    <td class="income">${{ month.income | number: '1.0-0' }}</td>
+                    <td class="expense">${{ month.expenses | number: '1.0-0' }}</td>
+                    <td [class]="getNetClass(month.net)">${{ month.net | number: '1.0-0' }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      }
+
+      <!-- Últimos Gastos -->
+      <div class="section-card full-width">
+        <div class="section-header">
+          <h3>Últimos Gastos</h3>
+          <a routerLink="/finanzas/gastos" class="link">Ver todos →</a>
+        </div>
+        @if (loadingExpenses) {
+          <div class="loading-inline">Cargando...</div>
+        } @else if (expenses.length === 0) {
+          <div class="empty-state">
+            <p>No hay gastos registrados</p>
+            <button class="btn btn-primary" (click)="openExpenseModal()">Registrar primer gasto</button>
+          </div>
+        } @else {
+          <div class="expenses-table">
+            <table>
+              <thead>
+                <tr>
+                  <th>Fecha</th>
+                  <th>Categoría</th>
+                  <th>Descripción</th>
+                  <th>Método</th>
+                  <th>Monto</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (expense of expenses.slice(0, 10); track expense.id) {
+                  <tr>
+                    <td>{{ expense.expense_date | date: 'dd/MM/yyyy' }}</td>
+                    <td>
+                      <span class="category-chip">{{ expense.category_name }}</span>
+                    </td>
+                    <td>{{ expense.description }}</td>
+                    <td>{{ getPaymentMethodLabel(expense.payment_method) }}</td>
+                    <td class="amount">${{ expense.amount | number: '1.2-2' }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Modal Registrar Gasto -->
+    @if (expenseModal) {
+      <div class="modal-overlay" (click)="closeExpenseModal()">
+        <div class="modal-card" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h2>Registrar Gasto</h2>
+            <button class="close-btn" (click)="closeExpenseModal()">×</button>
+          </div>
+          <div class="modal-body">
+            @if (expenseError) {
+              <div class="error-message">{{ expenseError }}</div>
+            }
+
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Categoría *</label>
+                <select [(ngModel)]="expenseForm.category_id">
+                  @for (cat of categories; track cat.id) {
+                    <option [value]="cat.id">{{ cat.name }}</option>
+                  }
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label>Monto *</label>
+                <input type="number" [(ngModel)]="expenseForm.amount" min="0" step="0.01" />
+              </div>
+
+              <div class="form-group full">
+                <label>Descripción *</label>
+                <input type="text" [(ngModel)]="expenseForm.description" placeholder="Ej: Compra de pantallas iPhone" />
+              </div>
+
+              <div class="form-group">
+                <label>Método de Pago</label>
+                <select [(ngModel)]="expenseForm.payment_method">
+                  <option value="CASH">Efectivo</option>
+                  <option value="CARD">Tarjeta</option>
+                  <option value="TRANSFER">Transferencia</option>
+                  <option value="OTHER">Otro</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label>Fecha</label>
+                <input type="date" [(ngModel)]="expenseForm.expense_date" />
+              </div>
+
+              <div class="form-group">
+                <label>Referencia / Factura</label>
+                <input type="text" [(ngModel)]="expenseForm.reference" placeholder="# Factura proveedor" />
+              </div>
+
+              <div class="form-group">
+                <label>Proveedor</label>
+                <input type="text" [(ngModel)]="expenseForm.supplier_name" placeholder="Nombre del proveedor" />
+              </div>
+
+              <!-- Sección para compra de inventario -->
+              <div class="form-group full inventory-section">
+                <label class="section-label">¿Es compra de inventario?</label>
+                <div class="inventory-row">
+                  <select [(ngModel)]="expenseForm.part_id">
+                    <option [value]="undefined">No aplica</option>
+                    @for (part of parts; track part.id) {
+                      <option [value]="part.id">{{ part.name }} (Stock: {{ part.stock_current }})</option>
+                    }
+                  </select>
+                  @if (expenseForm.part_id) {
+                    <input type="number" [(ngModel)]="expenseForm.quantity" min="1" placeholder="Cantidad" />
+                  }
+                </div>
+              </div>
+
+              <div class="form-group full">
+                <label>Notas</label>
+                <textarea [(ngModel)]="expenseForm.notes" rows="2" placeholder="Notas adicionales..."></textarea>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" (click)="closeExpenseModal()" [disabled]="submittingExpense">
+              Cancelar
+            </button>
+            <button class="btn btn-primary" (click)="submitExpense()" [disabled]="submittingExpense">
+              {{ submittingExpense ? 'Guardando...' : 'Registrar Gasto' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+</app-authenticated-layout>

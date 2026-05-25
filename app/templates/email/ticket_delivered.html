@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block content %}
+<p class="greeting" style="font-size: 18px; color: #333333; margin: 0 0 20px 0;">
+    Hola <strong>{{ client_name }}</strong>,
+</p>
+
+<p class="message" style="font-size: 15px; color: #555555; line-height: 1.6; margin: 0 0 24px 0;">
+    Tu equipo ha sido entregado exitosamente. ¡Gracias por confiar en nosotros!
+</p>
+
+<!-- Status Box - Completed -->
+<div class="status-box" style="background-color: #f0fdf4; border-left: 4px solid #22c55e; padding: 20px 24px; margin: 24px 0; border-radius: 0 8px 8px 0;">
+    <p class="status-label" style="font-size: 12px; color: #166534; text-transform: uppercase; letter-spacing: 0.5px; margin: 0 0 8px 0;">Estado del servicio</p>
+    <p class="status-value" style="font-size: 20px; font-weight: 600; color: #166534; margin: 0;">🎉 Entregado</p>
+</div>
+
+<!-- Service Summary -->
+<table role="presentation" cellspacing="0" cellpadding="0" width="100%" style="background-color: #f8f9fa; border-radius: 8px; margin: 24px 0; border: 0;">
+    <tr>
+        <td style="padding: 24px;">
+            <h3 style="font-size: 16px; color: #333333; margin: 0 0 16px 0;">Resumen del servicio</h3>
+            <table role="presentation" cellspacing="0" cellpadding="0" width="100%" style="border: 0;">
+                <tr>
+                    <td style="padding: 12px 0; border-bottom: 1px solid #e5e5e5;">
+                        <span style="font-size: 14px; color: #666666;">Código de seguimiento</span>
+                    </td>
+                    <td style="padding: 12px 0; border-bottom: 1px solid #e5e5e5; text-align: right;">
+                        <strong style="font-size: 14px; color: #1a5c3a; font-family: monospace;">{{ tracking_code }}</strong>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px 0; border-bottom: 1px solid #e5e5e5;">
+                        <span style="font-size: 14px; color: #666666;">Equipo</span>
+                    </td>
+                    <td style="padding: 12px 0; border-bottom: 1px solid #e5e5e5; text-align: right;">
+                        <span style="font-size: 14px; color: #333333;">{{ device_brand }} {{ device_model }}</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px 0; border-bottom: 1px solid #e5e5e5;">
+                        <span style="font-size: 14px; color: #666666;">Fecha de ingreso</span>
+                    </td>
+                    <td style="padding: 12px 0; border-bottom: 1px solid #e5e5e5; text-align: right;">
+                        <span style="font-size: 14px; color: #333333;">{{ intake_date }}</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px 0; border-bottom: 1px solid #e5e5e5;">
+                        <span style="font-size: 14px; color: #666666;">Fecha de entrega</span>
+                    </td>
+                    <td style="padding: 12px 0; border-bottom: 1px solid #e5e5e5; text-align: right;">
+                        <span style="font-size: 14px; color: #333333;">{{ delivery_date }}</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px 0;">
+                        <span style="font-size: 14px; color: #666666;">Total pagado</span>
+                    </td>
+                    <td style="padding: 12px 0; text-align: right;">
+                        <strong style="font-size: 16px; color: #1a5c3a;">${{ "{:,.0f}".format(total_cost) }}</strong>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+
+<!-- Thank you message -->
+<div style="background-color: #f0fdf4; border-radius: 12px; padding: 24px; margin: 24px 0; text-align: center;">
+    <p style="font-size: 24px; margin: 0 0 12px 0;">⭐⭐⭐⭐⭐</p>
+    <h3 style="font-size: 18px; color: #166534; margin: 0 0 12px 0;">¡Gracias por tu preferencia!</h3>
+    <p style="font-size: 14px; color: #666666; line-height: 1.6; margin: 0;">
+        Tu opinión es muy importante para nosotros. Si tienes algún comentario o sugerencia, no dudes en contactarnos.
+    </p>
+</div>
+
+<!-- Warranty Note -->
+<div style="background-color: #dbeafe; border: 1px solid #93c5fd; border-radius: 8px; padding: 16px 20px; margin: 24px 0;">
+    <p style="font-size: 13px; color: #1e40af; margin: 0; line-height: 1.5;">
+        <strong>Garantía:</strong> Tu reparación cuenta con 30 días de garantía en mano de obra y repuestos. Conserva tu comprobante de servicio.
+    </p>
+</div>
+
+<!-- CTA Button -->
+<div style="text-align: center; margin: 32px 0;">
+    <a href="{{ portal_url }}" class="cta-button" style="display: inline-block; background-color: #1a5c3a; color: #ffffff !important; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-size: 15px; font-weight: 600;">
+        Ver historial de servicios
+    </a>
+</div>
+{% endblock %}

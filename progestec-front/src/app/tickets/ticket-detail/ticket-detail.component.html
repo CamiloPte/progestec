@@ -1,0 +1,790 @@
+<app-authenticated-layout>
+  <ng-container *ngIf="ticket as detail; else loadingState">
+    <section class="ticket-wrapper">
+      <header class="ticket-header">
+        <div class="header-info">
+          <h1>
+            Ticket {{ detail.tracking_code }}: {{ detail.device_label || (detail.device.brand + ' ' + detail.device.model) }}
+          </h1>
+          <p class="ticket-assignee">
+            Asignado a: <strong>{{ detail.assignee_name || 'Sin asignar' }}</strong>
+          </p>
+        </div>
+        <div class="header-actions">
+          <div class="pdf-buttons">
+            <button 
+              class="btn btn-outline btn-pdf" 
+              type="button" 
+              (click)="downloadReceptionPdf()" 
+              [disabled]="downloadingPdf"
+              title="Comprobante de recepción"
+            >
+              📋 Recepción
+            </button>
+            <button 
+              class="btn btn-outline btn-pdf" 
+              type="button" 
+              (click)="downloadDeliveryPdf()" 
+              [disabled]="downloadingPdf"
+              title="Orden de entrega"
+            >
+              📦 Entrega
+            </button>
+          </div>
+          <span [ngClass]="getStatusChipClass()">
+            {{ detail.status.name || detail.status.code }}
+          </span>
+        </div>
+      </header>
+
+      <div class="ticket-body">
+        <div class="ticket-main">
+         <article class="card service-card">
+            <h2>Información del servicio</h2>
+            <div class="service-grid">
+              <div>
+                <p class="label">Falla reportada</p>
+                <p>{{ detail.failure_desc }}</p>
+              </div>
+              <div>
+                <p class="label">Diagnóstico técnico</p>
+                <p>{{ detail.diagnosis || 'Pendiente de actualización' }}</p>
+              </div>
+              <div>
+                <p class="label">Presupuesto</p>
+                <p *ngIf="detail.cost_estimate; else noBudget">
+                  ${{ detail.cost_estimate | number:'1.2-2' }}
+                </p>
+                <ng-template #noBudget>--</ng-template>
+              </div>
+              <div>
+                <p class="label">Aprobación</p>
+                <p class="approval-status">
+                  <span *ngIf="detail.approved_by_owner === 1; else waitingApproval">
+                    Aprobado
+                  </span>
+                  <ng-template #waitingApproval>
+                    <span class="waiting-approval">
+                      <span class="trophy-icon">🏆</span>
+                      Esperando Aprobación
+                    </span>
+                  </ng-template>
+                </p>
+              </div>
+            </div>
+            <div class="service-dates">
+              <div>
+                <p class="label">Ingresado</p>
+                <p>{{ detail.intake_at | date: 'dd/MM/yyyy' }}</p>
+              </div>
+              <div>
+                <p class="label">Listo</p>
+                <p>{{ detail.ready_at ? (detail.ready_at | date: 'dd/MM/yyyy') : '--' }}</p>
+              </div>
+              <div>
+                <p class="label">Entregado</p>
+                <p>
+                  {{ detail.delivered_at ? (detail.delivered_at | date: 'dd/MM/yyyy') : '--' }}
+                </p>
+              </div>
+              <div>
+                <p class="label">Cerrado</p>
+                <p>{{ detail.closed_at ? (detail.closed_at | date: 'dd/MM/yyyy') : '--' }}</p>
+              </div>
+            </div>
+          </article>
+
+          <article class="card" *ngIf="detail.owner; else noOwner">
+            <h2>Datos personales del cliente</h2>
+            <div class="client-grid">
+              <div>
+                <p class="label">Nombre</p>
+                <p>{{ detail.owner.full_name || '--' }}</p>
+              </div>
+              <div>
+                <p class="label">Teléfono</p>
+                <p>{{ detail.owner.phone || '--' }}</p>
+              </div>
+              <div>
+                <p class="label">Email</p>
+                <p>{{ detail.owner.email || '--' }}</p>
+              </div>
+              <div>
+                <p class="label">Dirección</p>
+                <p>{{ detail.owner.address || '--' }}</p>
+              </div>
+            </div>
+          </article>
+          <ng-template #noOwner>
+            <article class="card">
+              <h2>Datos personales del cliente</h2>
+              <p class="muted">No se encontró información del cliente.</p>
+            </article>
+          </ng-template>
+
+          <article class="card">
+            <h2>Datos del dispositivo</h2>
+            <div class="device-grid">
+              <div>
+                <p class="label">Tipo</p>
+                <p>{{ detail.device.type }}</p>
+              </div>
+              <div>
+                <p class="label">Marca</p>
+                <p>{{ detail.device.brand }}</p>
+              </div>
+              <div>
+                <p class="label">Modelo</p>
+                <p>{{ detail.device.model }}</p>
+              </div>
+              <div>
+                <p class="label">Serial / IMEI</p>
+                <p>{{ detail.device.serial || detail.device.imei || '--' }}</p>
+              </div>
+            </div>
+            <div class="intake-images-section" *ngIf="intakeImages.length">
+              <p class="label" style="margin-top: 1.5rem; margin-bottom: 0.75rem;">Imágenes de recepción</p>
+              <div class="intake-images-grid">
+                <div class="intake-image-item" *ngFor="let file of intakeImages">
+                  <div class="attachment-actions" *ngIf="canManageAttachments">
+                    <button type="button" (click)="openDeleteModal(file)">×</button>
+                  </div>
+                  <a [href]="resolveFileUrl(file)" target="_blank" rel="noopener noreferrer">
+                    <img [src]="resolveFileUrl(file)" [alt]="file.original_name" />
+                  </a>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <!-- Sección de Repuestos -->
+          <article class="card parts-card">
+            <div class="parts-card__header">
+              <div>
+                <h2>Repuestos Utilizados</h2>
+                <p class="parts-subtitle">
+                  Partes del inventario asignadas a este ticket
+                </p>
+              </div>
+              <div class="parts-actions" *ngIf="canManageParts && !invoice">
+                <button type="button" class="btn btn-dark" (click)="openPartsModal()">
+                  + Agregar repuesto
+                </button>
+              </div>
+            </div>
+
+            <div *ngIf="partsLoading" class="parts-loading">
+              <div class="spinner-border" role="status"></div>
+              <span>Cargando repuestos...</span>
+            </div>
+
+            <ng-container *ngIf="!partsLoading">
+              <div class="parts-table-wrapper" *ngIf="ticketParts.length; else emptyParts">
+                <table class="parts-table">
+                  <thead>
+                    <tr>
+                      <th>Repuesto</th>
+                      <th>SKU</th>
+                      <th>Cantidad</th>
+                      <th>Precio Unit.</th>
+                      <th>Total</th>
+                      <th *ngIf="canManageParts && !invoice"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let part of ticketParts">
+                      <td>{{ part.part_name || 'Repuesto #' + part.part_id }}</td>
+                      <td>{{ part.part_sku || '--' }}</td>
+                      <td>{{ part.qty }}</td>
+                      <td>${{ part.unit_price_snapshot | number: '1.2-2' }}</td>
+                      <td class="text-bold">${{ part.total_cost | number: '1.2-2' }}</td>
+                      <td *ngIf="canManageParts && !invoice">
+                        <button
+                          type="button"
+                          class="btn-icon-danger"
+                          [disabled]="removingPartId === part.id"
+                          (click)="removeTicketPart(part.id)"
+                          title="Quitar repuesto"
+                        >
+                          {{ removingPartId === part.id ? '...' : '×' }}
+                        </button>
+                      </td>
+                    </tr>
+                  </tbody>
+                  <tfoot>
+                    <tr>
+                      <td colspan="4" class="text-right"><strong>Total Repuestos:</strong></td>
+                      <td class="text-bold">${{ partsCost | number: '1.2-2' }}</td>
+                      <td *ngIf="canManageParts && !invoice"></td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+              <ng-template #emptyParts>
+                <div class="parts-empty">
+                  <p>No hay repuestos asignados a este ticket.</p>
+                  <button
+                    *ngIf="canManageParts && !invoice"
+                    type="button"
+                    class="btn btn-light"
+                    (click)="openPartsModal()"
+                  >
+                    Agregar primer repuesto
+                  </button>
+                </div>
+              </ng-template>
+            </ng-container>
+          </article>
+
+          <article class="card invoice-card">
+            <div class="invoice-card__header">
+              <div>
+                <h2>Facturación</h2>
+                <p class="invoice-subtitle">
+                  Control de costos y pagos asociados al ticket
+                </p>
+              </div>
+              <div class="invoice-actions">
+                <button
+                  *ngIf="invoiceDetailLink.length && invoice"
+                  class="btn btn-light"
+                  [routerLink]="invoiceDetailLink"
+                >
+                  Ver detalle
+                </button>
+                <button
+                  *ngIf="!invoice && canGenerateInvoice"
+                  type="button"
+                  class="btn btn-dark"
+                  (click)="openInvoiceModal()"
+                >
+                  Generar factura
+                </button>
+              </div>
+            </div>
+
+            <div *ngIf="invoiceLoading" class="invoice-loading">
+              <div class="spinner-border" role="status"></div>
+              <span>Cargando facturación...</span>
+            </div>
+
+            <ng-container *ngIf="!invoiceLoading">
+              <ng-container *ngIf="invoice; else invoiceEmptyState">
+                <div class="invoice-summary-grid">
+                  <div>
+                    <p class="label">Número de factura</p>
+                    <p class="invoice-number">
+                      {{ invoice.invoice_number }}
+                      <span [ngClass]="invoiceStatusClass">
+                        {{ invoice.status | titlecase }}
+                      </span>
+                    </p>
+                  </div>
+                  <div>
+                    <p class="label">Fecha de emisión</p>
+                    <p>{{ invoice.issue_date | date: 'dd/MM/yyyy' }}</p>
+                  </div>
+                  <div>
+                    <p class="label">Fecha de vencimiento</p>
+                    <p>{{ invoice.due_date ? (invoice.due_date | date: 'dd/MM/yyyy') : '--' }}</p>
+                  </div>
+                  <div>
+                    <p class="label">Cliente</p>
+                    <p>{{ invoice.client_name || (ticket.owner?.full_name ?? '--') }}</p>
+                  </div>
+                </div>
+
+                <div class="invoice-breakdown">
+                  <div>
+                    <p class="label">Repuestos</p>
+                    <p>${{ invoice.parts_cost | number: '1.2-2' }}</p>
+                  </div>
+                  <div>
+                    <p class="label">Mano de obra</p>
+                    <p>${{ invoice.labor_cost | number: '1.2-2' }}</p>
+                  </div>
+                  <div>
+                    <p class="label">Descuento</p>
+                    <p>-${{ invoice.discount_amount | number: '1.2-2' }}</p>
+                  </div>
+                  <div>
+                    <p class="label">Subtotal</p>
+                    <p>${{ invoice.subtotal | number: '1.2-2' }}</p>
+                  </div>
+                  <div>
+                    <p class="label">Impuestos ({{ invoice.tax_percentage }}%)</p>
+                    <p>${{ invoice.tax_amount | number: '1.2-2' }}</p>
+                  </div>
+                  <div class="invoice-total">
+                    <p class="label">Total</p>
+                    <p class="invoice-total__value">
+                      ${{ invoice.total | number: '1.2-2' }}
+                    </p>
+                  </div>
+                </div>
+
+                <div class="invoice-payment-summary">
+                  <div>
+                    <p class="label">Pagado</p>
+                    <p class="text-success">${{ invoice.total_paid | number: '1.2-2' }}</p>
+                  </div>
+                  <div>
+                    <p class="label">Saldo pendiente</p>
+                    <p class="text-warning">
+                      {{ outstandingAmount <= 0 ? '$0' : ('$' + (outstandingAmount | number: '1.2-2')) }}
+                    </p>
+                  </div>
+                </div>
+
+                <div class="invoice-payments" *ngIf="invoice.payments.length; else emptyPayments">
+                  <p class="label">Pagos registrados</p>
+                  <ul>
+                    <li *ngFor="let payment of invoice.payments">
+                      <div>
+                        <strong>{{ payment.amount | currency:'USD':'symbol':'1.2-2' }}</strong>
+                        · {{ payment.payment_method | titlecase }}
+                      </div>
+                      <div class="payment-meta">
+                        {{ payment.paid_at | date: 'dd/MM/yyyy' }}
+                        <span *ngIf="payment.reference">· Ref: {{ payment.reference }}</span>
+                      </div>
+                    </li>
+                  </ul>
+                </div>
+                <ng-template #emptyPayments>
+                  <p class="muted">Aún no hay pagos registrados.</p>
+                </ng-template>
+              </ng-container>
+            </ng-container>
+
+            <ng-template #invoiceEmptyState>
+              <div class="invoice-empty">
+                <p>Este ticket aún no tiene factura.</p>
+                <button
+                  *ngIf="canGenerateInvoice"
+                  type="button"
+                  class="btn btn-dark"
+                  (click)="openInvoiceModal()"
+                >
+                  Generar factura
+                </button>
+              </div>
+            </ng-template>
+          </article>
+
+          <article class="card" *ngIf="otherAttachments.length">
+            <h2>Archivos adjuntos</h2>
+            <div class="attachments-grid">
+              <div
+                *ngFor="let file of otherAttachments"
+                class="attachment-item"
+                [class.image]="isImageAttachment(file)"
+              >
+                <div class="attachment-actions" *ngIf="canManageAttachments">
+                  <button type="button" (click)="openDeleteModal(file)">×</button>
+                </div>
+                <a [href]="resolveFileUrl(file)" target="_blank" rel="noopener noreferrer">
+                  <img *ngIf="isImageAttachment(file)" [src]="resolveFileUrl(file)" [alt]="file.original_name" />
+                  <span class="attachment-name">{{ file.original_name }}</span>
+                </a>
+                <span class="attachment-meta">
+                  {{ file.attachment_type | titlecase }} ·
+                  {{ file.created_at | date: 'dd/MM/yyyy HH:mm' }}
+                </span>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <aside class="ticket-sidebar">
+          <article class="card actions-card">
+            <h3>Acciones</h3>
+            <button
+              type="button"
+              class="btn btn-dark"
+              (click)="openStatusModal()"
+              *ngIf="canUpdateStatus"
+            >
+              ←→ Cambiar Estado
+            </button>
+            <button
+              type="button"
+              class="btn btn-light"
+              (click)="openDiagnosisModal()"
+              *ngIf="canUpdateService"
+            >
+              Actualizar Diagnóstico
+            </button>
+            <button
+              type="button"
+              class="btn btn-light"
+              (click)="openBudgetModal()"
+              *ngIf="canUpdateService"
+            >
+              Actualizar Presupuesto
+            </button>
+
+            <div class="assign-block" *ngIf="canManageAssignment || canAssignSelf || canUnassignSelf">
+              <!-- Vista para Admin/Asesor: combo completo -->
+              <ng-container *ngIf="canSelectTechnician">
+                <p class="label">Asignar Técnico</p>
+                <select [(ngModel)]="selectedTechnicianId">
+                  <option [ngValue]="null">Seleccionar un técnico</option>
+                  <option *ngFor="let tech of technicians" [ngValue]="tech.id">
+                    {{ tech.full_name }}
+                  </option>
+                </select>
+                <div class="assign-buttons">
+                  <button type="button" class="btn btn-dark" [disabled]="assigning" (click)="onAssign()">
+                    {{ assigning ? 'Guardando...' : 'Guardar' }}
+                  </button>
+                  <button type="button" class="btn btn-danger" *ngIf="ticket?.assignee_user_id" (click)="removeAssignment()">
+                    Quitar
+                  </button>
+                </div>
+              </ng-container>
+              
+              <!-- Vista para Técnico: solo botones simples -->
+              <ng-container *ngIf="!canSelectTechnician">
+                <p class="label">Asignación</p>
+                <div class="tech-assign-buttons">
+                  <button 
+                    *ngIf="canAssignSelf" 
+                    type="button" 
+                    class="btn btn-primary" 
+                    [disabled]="assigning" 
+                    (click)="assignToMe()">
+                    {{ assigning ? 'Asignando...' : 'Asignarme este ticket' }}
+                  </button>
+                  <button 
+                    *ngIf="canUnassignSelf" 
+                    type="button" 
+                    class="btn btn-outline-danger" 
+                    [disabled]="assigning" 
+                    (click)="removeAssignment()">
+                    {{ assigning ? 'Quitando...' : 'Quitar mi asignación' }}
+                  </button>
+                </div>
+              </ng-container>
+              
+              <p *ngIf="assignFeedback" class="feedback">{{ assignFeedback }}</p>
+            </div>
+          </article>
+
+          <article class="card timeline-card">
+            <h3>Historial / Línea de tiempo</h3>
+            <div class="timeline-list" *ngIf="timelineItems.length; else emptyHistory">
+              <div class="timeline-item" *ngFor="let entry of timelineItems">
+                <div class="timeline-marker">
+                  <span class="timeline-badge" [ngClass]="getTimelineBadgeClass(entry)"></span>
+                </div>
+                <div class="timeline-content">
+                  <p class="timeline-title">
+                    {{ entry.status_name || entry.status_code }}
+                  </p>
+                  <p class="timeline-note" *ngIf="entry.note && !isAutoNote(entry.note)">{{ entry.note }}</p>
+                  <p class="timeline-meta">
+                    {{ entry.created_at | date: 'dd/MM/yyyy HH:mm' }}
+                    <span class="timeline-user-inline">• {{ entry.user_name || 'Sistema' }}</span>
+                  </p>
+                </div>
+              </div>
+            </div>
+            <ng-template #emptyHistory>
+              <p class="empty-timeline">Aún no hay movimientos registrados.</p>
+            </ng-template>
+          </article>
+        </aside>
+      </div>
+    </section>
+
+    <div class="global-overlay" *ngIf="loading">
+      <div class="spinner-border" role="status"></div>
+    </div>
+
+    <!-- Modal Cambiar Estado -->
+    <div class="modal-overlay" *ngIf="statusModal.open">
+      <div class="modal-card">
+        <header>
+          <h4>Cambiar estado de ticket</h4>
+          <button type="button" class="modal-close" (click)="closeStatusModal()">×</button>
+        </header>
+        <div class="modal-body">
+          <label>Estado actual</label>
+          <p class="current-status-display">{{ ticket!.status.name }}</p>
+          
+          <label>Nuevo estado</label>
+          <div *ngIf="statusModal.loadingTransitions" class="loading-transitions">
+            Cargando estados disponibles...
+          </div>
+          <select *ngIf="!statusModal.loadingTransitions" [(ngModel)]="statusModal.statusId" [disabled]="statusModal.validTransitions.length === 0">
+            <option [ngValue]="null">-- Selecciona un estado --</option>
+            <option *ngFor="let st of statusModal.validTransitions" [ngValue]="st.id">{{ st.name }}</option>
+          </select>
+          <p *ngIf="!statusModal.loadingTransitions && statusModal.validTransitions.length === 0" class="no-transitions-msg">
+            No hay transiciones disponibles desde el estado actual.
+          </p>
+          
+          <label>Notas (opcional)</label>
+          <textarea rows="3" [(ngModel)]="statusModal.note" placeholder="Añade detalles sobre el cambio..."></textarea>
+          <label>Subir evidencia (opcional)</label>
+          <input type="file" (change)="handleFileSelection('status', $event)" />
+          <p *ngIf="statusModal.error" class="modal-error">{{ statusModal.error }}</p>
+        </div>
+        <footer>
+          <button type="button" class="btn btn-light" (click)="closeStatusModal()">
+            Cancelar
+          </button>
+          <button type="button" class="btn btn-dark" 
+                  [disabled]="statusModal.saving || statusModal.loadingTransitions || !statusModal.statusId" 
+                  (click)="submitStatusModal()">
+            {{ statusModal.saving ? 'Guardando...' : 'Confirmar cambio' }}
+          </button>
+        </footer>
+      </div>
+    </div>
+
+    <!-- Modal Diagnóstico -->
+    <div class="modal-overlay" *ngIf="diagnosisModal.open">
+      <div class="modal-card">
+        <header>
+          <h4>Actualizar diagnóstico</h4>
+          <button type="button" class="modal-close" (click)="closeDiagnosisModal()">×</button>
+        </header>
+        <div class="modal-body">
+          <label>Diagnóstico técnico</label>
+          <textarea rows="4" [(ngModel)]="diagnosisModal.diagnosis" placeholder="Describe el nuevo diagnóstico..."></textarea>
+          <label>Notas (opcional)</label>
+          <textarea rows="2" [(ngModel)]="diagnosisModal.note" placeholder="Añade notas internas..."></textarea>
+          <label>Subir evidencia (opcional)</label>
+          <input type="file" (change)="handleFileSelection('diagnosis', $event)" />
+          <p *ngIf="diagnosisModal.error" class="modal-error">{{ diagnosisModal.error }}</p>
+        </div>
+        <footer>
+          <button type="button" class="btn btn-light" (click)="closeDiagnosisModal()">
+            Cancelar
+          </button>
+          <button type="button" class="btn btn-dark" [disabled]="diagnosisModal.saving" (click)="submitDiagnosisModal()">
+            {{ diagnosisModal.saving ? 'Guardando...' : 'Guardar diagnóstico' }}
+          </button>
+        </footer>
+      </div>
+    </div>
+
+    <!-- Modal Presupuesto -->
+    <div class="modal-overlay" *ngIf="budgetModal.open">
+      <div class="modal-card">
+        <header>
+          <h4>Actualizar presupuesto</h4>
+          <button type="button" class="modal-close" (click)="closeBudgetModal()">×</button>
+        </header>
+        <div class="modal-body">
+          <label>Nuevo presupuesto (COP)</label>
+          <input type="text" [(ngModel)]="budgetModal.amount" placeholder="Ej: 350000" />
+          <label>Notas (opcional)</label>
+          <textarea rows="2" [(ngModel)]="budgetModal.note" placeholder="Añade detalles adicionales..."></textarea>
+          <label>Subir evidencia (opcional)</label>
+          <input type="file" (change)="handleFileSelection('budget', $event)" />
+          <p *ngIf="budgetModal.error" class="modal-error">{{ budgetModal.error }}</p>
+        </div>
+        <footer>
+          <button type="button" class="btn btn-light" (click)="closeBudgetModal()">
+            Cancelar
+          </button>
+          <button type="button" class="btn btn-dark" [disabled]="budgetModal.saving" (click)="submitBudgetModal()">
+            {{ budgetModal.saving ? 'Guardando...' : 'Guardar presupuesto' }}
+          </button>
+        </footer>
+      </div>
+    </div>
+
+    <!-- Modal Agregar Repuesto -->
+    <div class="modal-overlay" *ngIf="partsModal.open">
+      <div class="modal-card">
+        <header>
+          <h4>Agregar repuesto al ticket</h4>
+          <button type="button" class="modal-close" (click)="closePartsModal()">×</button>
+        </header>
+        <div class="modal-body">
+          <label>Seleccionar repuesto</label>
+          <select [(ngModel)]="partsModal.selectedPartId">
+            <option [ngValue]="null">-- Selecciona un repuesto --</option>
+            <option *ngFor="let part of availableParts" [ngValue]="part.id">
+              {{ part.name }} (Stock: {{ part.stock_current }}) - ${{ part.unit_price | number: '1.2-2' }}
+            </option>
+          </select>
+
+          <div class="part-info" *ngIf="partsModal.selectedPartId">
+            <p><strong>Stock disponible:</strong> {{ getSelectedPartStock() }} unidades</p>
+            <p><strong>Precio unitario:</strong> ${{ getSelectedPartPrice() | number: '1.2-2' }}</p>
+          </div>
+
+          <label>Cantidad</label>
+          <input
+            type="number"
+            min="1"
+            [max]="getSelectedPartStock()"
+            [(ngModel)]="partsModal.qty"
+          />
+
+          <label>Notas (opcional)</label>
+          <textarea rows="2" [(ngModel)]="partsModal.notes" placeholder="Ej: Cambio de pantalla..."></textarea>
+
+          <p *ngIf="partsModal.error" class="modal-error">{{ partsModal.error }}</p>
+        </div>
+        <footer>
+          <button type="button" class="btn btn-light" (click)="closePartsModal()" [disabled]="partsModal.saving">
+            Cancelar
+          </button>
+          <button
+            type="button"
+            class="btn btn-dark"
+            (click)="submitPartsModal()"
+            [disabled]="partsModal.saving || !partsModal.selectedPartId"
+          >
+            {{ partsModal.saving ? 'Agregando...' : 'Agregar repuesto' }}
+          </button>
+        </footer>
+      </div>
+    </div>
+
+    <!-- Modal Factura -->
+    <div class="modal-overlay" *ngIf="invoiceModal.open">
+      <div class="modal-card invoice-modal-card">
+        <header>
+          <h4>Generar factura</h4>
+          <button type="button" class="modal-close" (click)="closeInvoiceModal()">×</button>
+        </header>
+        <div class="modal-body invoice-modal-body">
+          <!-- Lista de repuestos incluidos -->
+          <div class="invoice-parts-summary" *ngIf="ticketParts.length">
+            <h5>Repuestos incluidos ({{ ticketParts.length }})</h5>
+            <ul class="invoice-parts-list">
+              <li *ngFor="let part of ticketParts">
+                <span>{{ part.part_name || 'Repuesto' }} × {{ part.qty }}</span>
+                <strong>${{ part.total_cost | number: '1.2-2' }}</strong>
+              </li>
+            </ul>
+            <div class="invoice-parts-total">
+              <span>Total repuestos:</span>
+              <strong>${{ partsCost | number: '1.2-2' }}</strong>
+            </div>
+          </div>
+          <div class="invoice-no-parts" *ngIf="!ticketParts.length">
+            <p>⚠️ No hay repuestos agregados al ticket. El costo de repuestos será $0.</p>
+          </div>
+
+          <div class="invoice-form-grid">
+            <label>
+              Mano de obra (COP)
+              <input
+                type="number"
+                min="0"
+                [(ngModel)]="invoiceModal.form.labor_cost"
+                (ngModelChange)="onInvoiceFieldChange()"
+              />
+            </label>
+            <label>
+              Descuento (COP)
+              <input
+                type="number"
+                min="0"
+                [(ngModel)]="invoiceModal.form.discount_amount"
+                (ngModelChange)="onInvoiceFieldChange()"
+              />
+            </label>
+            <label>
+              Impuesto (%)
+              <input
+                type="number"
+                step="0.1"
+                [(ngModel)]="invoiceModal.form.tax_percentage"
+                (ngModelChange)="onInvoiceFieldChange()"
+              />
+            </label>
+            <label>
+              Fecha de vencimiento
+              <input type="date" [(ngModel)]="invoiceModal.form.due_date" />
+            </label>
+          </div>
+
+          <label>Notas (opcional)</label>
+          <textarea rows="3" [(ngModel)]="invoiceModal.form.notes"></textarea>
+
+          <div class="invoice-preview">
+            <h5>Resumen estimado</h5>
+            <ul>
+              <li>
+                <span>Repuestos</span>
+                <strong>${{ invoiceModal.preview.parts | number: '1.2-2' }}</strong>
+              </li>
+              <li>
+                <span>Mano de obra</span>
+                <strong>${{ invoiceModal.preview.labor | number: '1.2-2' }}</strong>
+              </li>
+              <li>
+                <span>Descuento</span>
+                <strong>-${{ invoiceModal.preview.discount | number: '1.2-2' }}</strong>
+              </li>
+              <li>
+                <span>Subtotal</span>
+                <strong>${{ invoiceModal.preview.subtotal | number: '1.2-2' }}</strong>
+              </li>
+              <li>
+                <span>Impuestos</span>
+                <strong>${{ invoiceModal.preview.tax | number: '1.2-2' }}</strong>
+              </li>
+              <li class="preview-total">
+                <span>Total estimado</span>
+                <strong>${{ invoiceModal.preview.total | number: '1.2-2' }}</strong>
+              </li>
+            </ul>
+          </div>
+          <p *ngIf="invoiceModal.error" class="modal-error">{{ invoiceModal.error }}</p>
+        </div>
+        <footer>
+          <button type="button" class="btn btn-light" (click)="closeInvoiceModal()" [disabled]="invoiceModal.saving">
+            Cancelar
+          </button>
+          <button
+            type="button"
+            class="btn btn-dark"
+            (click)="submitInvoiceModal()"
+            [disabled]="invoiceModal.saving"
+          >
+            {{ invoiceModal.saving ? 'Generando...' : 'Crear factura' }}
+          </button>
+        </footer>
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- Modal eliminar adjunto -->
+  <div class="modal-overlay" *ngIf="deleteModal.open">
+    <div class="modal-card delete-card">
+      <div class="delete-icon">🗑️</div>
+      <h4>Eliminar adjunto</h4>
+      <p class="modal-text">
+        ¿Estás seguro de que quieres eliminar
+        <strong>{{ deleteModal.file?.original_name }}</strong>?
+        Esta acción no se puede deshacer.
+      </p>
+      <p *ngIf="deleteModal.error" class="modal-error">{{ deleteModal.error }}</p>
+      <footer class="modal-footer">
+        <button type="button" class="btn btn-light" (click)="closeDeleteModal()" [disabled]="deleteModal.loading">
+          Cancelar
+        </button>
+        <button type="button" class="btn btn-danger" (click)="confirmDelete()" [disabled]="deleteModal.loading">
+          {{ deleteModal.loading ? 'Eliminando...' : 'Eliminar' }}
+        </button>
+      </footer>
+    </div>
+  </div>
+
+  <ng-template #loadingState>
+    <div class="loading-panel">
+      <div class="spinner-border" role="status"></div>
+      <p>Cargando ticket...</p>
+    </div>
+  </ng-template>
+</app-authenticated-layout>

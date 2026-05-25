@@ -1,0 +1,149 @@
+<!-- Vista de detalle de inventario: muestra un repuesto y sus movimientos. -->
+<app-authenticated-layout>
+  <section
+    class="detail-wrapper"
+    *ngIf="!loading && part as partData; else loadingTemplate"
+  >
+    <header class="detail-header">
+      <div>
+        <p class="eyebrow">Detalle de repuesto</p>
+        <h1>{{ partData.name }}</h1>
+        <p class="subtitle">Código: {{ partData.sku || 'N/A' }}</p>
+      </div>
+      <div class="actions">
+        <button class="btn-outline" (click)="backToList()">Volver</button>
+        <button class="btn-primary" (click)="openMovementModal()">
+          <span class="icon">+</span>
+          Registrar movimiento
+        </button>
+      </div>
+    </header>
+
+    <div class="overview-grid">
+      <article class="card info-card">
+        <div class="info-row">
+          <span class="label">Estado</span>
+          <span [ngClass]="statusClass">{{ statusLabel }}</span>
+        </div>
+        <div class="info-row">
+          <span class="label">Stock actual</span>
+          <span class="value">{{ partData.stock_current }} unidades</span>
+        </div>
+        <div class="info-row">
+          <span class="label">Stock mínimo</span>
+          <span class="value">{{ partData.stock_min }} unidades</span>
+        </div>
+        <div class="info-row">
+          <span class="label">Compatible con</span>
+          <span class="value">
+            {{ partData.compatible_models || 'Sin registros' }}
+          </span>
+        </div>
+      </article>
+
+      <article class="card info-card">
+        <div class="info-grid">
+          <div>
+            <p class="label">Categoría</p>
+            <p class="value">{{ partData.category || 'Sin categoría' }}</p>
+          </div>
+          <div>
+            <p class="label">Fabricante</p>
+            <p class="value">{{ partData.manufacturer || '—' }}</p>
+          </div>
+          <div>
+            <p class="label">Costo unitario</p>
+            <p class="value">
+              {{ partData.unit_price | currency: 'USD' : 'symbol-narrow' }}
+            </p>
+          </div>
+          <div>
+            <p class="label">Proveedor</p>
+            <p class="value">{{ partData.preferred_vendor || '—' }}</p>
+          </div>
+        </div>
+      </article>
+    </div>
+
+    <div class="content-grid">
+      <article class="card">
+        <div class="card-header">
+          <h2>Movimientos recientes</h2>
+          <button class="link-btn" (click)="viewAllMovements()">
+            Actualizar
+          </button>
+        </div>
+        <ul class="timeline">
+          <li *ngFor="let movement of partData.movements">
+            <div
+              class="timeline-icon"
+              [ngClass]="movement.movement_type === 'IN' ? 'in' : 'out'"
+            >
+              <span class="material-symbols-outlined">
+                {{
+                  movement.movement_type === 'IN'
+                    ? 'arrow_upward'
+                    : 'arrow_downward'
+                }}
+              </span>
+            </div>
+            <div class="timeline-content">
+              <p class="movement-title">
+                {{ movement.movement_type === 'IN' ? 'Ingreso' : 'Egreso' }}
+                de <strong>{{ movement.quantity }}</strong> unidades
+              </p>
+              <p class="movement-meta">
+                Por {{ movement.responsible_name || 'usuario' }}
+                <span *ngIf="movement.document_ref">
+                  — Doc: {{ movement.document_ref }}
+                </span>
+              </p>
+              <p class="movement-date">
+                {{ movement.movement_at | date: 'short' }}
+              </p>
+            </div>
+          </li>
+          <li *ngIf="!partData.movements.length">
+            <p class="empty-state">Aún no hay movimientos registrados.</p>
+          </li>
+        </ul>
+      </article>
+
+      <article class="card side-card">
+        <h3>Alertas y reglas</h3>
+        <label class="checkbox">
+          <input type="checkbox" [checked]="partData.requires_approval" disabled />
+          <span>Requiere aprobación para su uso</span>
+        </label>
+        <p class="helper">
+          Las alertas de bajo stock se activan automáticamente cuando el stock
+          actual es menor o igual al stock mínimo configurado.
+        </p>
+        <button class="btn-secondary" disabled>
+          Activar alerta
+        </button>
+
+        <div class="attachments">
+          <h4>Notas</h4>
+          <p>
+            {{
+              partData.notes || 'Sin notas registradas para este repuesto.'
+            }}
+          </p>
+        </div>
+      </article>
+    </div>
+
+    <!-- Modal movimiento (se mantiene igual que lo tenías) -->
+    <!-- ... -->
+  </section>
+</app-authenticated-layout>
+
+<ng-template #loadingTemplate>
+  <app-authenticated-layout>
+    <div class="loading-state">
+      <div class="spinner-border" role="status"></div>
+      <p>Cargando información del repuesto...</p>
+    </div>
+  </app-authenticated-layout>
+</ng-template>

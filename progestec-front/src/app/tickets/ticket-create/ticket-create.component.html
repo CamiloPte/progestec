@@ -1,0 +1,443 @@
+<app-authenticated-layout>
+  <section class="ticket-create-page">
+    <header class="page-header">
+      <div>
+        <h1>Crear Nuevo Ticket</h1>
+        <p class="subtitle">Rellena los detalles para registrar una nueva incidencia.</p>
+      </div>
+    </header>
+
+    <form [formGroup]="form" class="form-stack" (ngSubmit)="submit()">
+      <div *ngIf="error" class="form-error">
+        {{ error }}
+      </div>
+
+      <!-- Información del Cliente -->
+      <article class="card section-card">
+        <h2>Información del Cliente</h2>
+
+        <div class="field-inline">
+          <label for="clientSearch">Buscar Cliente</label>
+          <div class="search-row">
+            <input
+              id="clientSearch"
+              name="clientSearch"
+              type="text"
+              placeholder="Nombre completo, número de identificación o correo"
+              [(ngModel)]="clientSearch"
+              [ngModelOptions]="{ standalone: true }"
+              readonly
+              (click)="openClientSearchModal()"
+            />
+            <button type="button" class="btn-primary" (click)="openClientSearchModal()">
+              Buscar
+            </button>
+          </div>
+          <div class="add-link">
+            <button type="button" class="link-btn" (click)="openClientModal()">
+              <span class="plus">+</span> Añadir nuevo cliente
+            </button>
+          </div>
+        </div>
+
+        <div class="selected-card" *ngIf="selectedClient">
+          <div class="selected-header">
+            <div>
+              <h3>Datos del Cliente Seleccionado</h3>
+              <p class="muted">Si no es el correcto, puedes cambiarlo.</p>
+            </div>
+            <button type="button" class="link-btn small" (click)="clearClientSelection()">Cambiar / limpiar</button>
+          </div>
+          <div class="grid-2">
+            <div>
+              <p class="muted">Nombre Completo</p>
+              <p class="value">{{ selectedClient.full_name }}</p>
+            </div>
+            <div>
+              <p class="muted">Email</p>
+              <p class="value">{{ selectedClient.email }}</p>
+            </div>
+            <div>
+              <p class="muted">Teléfono</p>
+              <p class="value">{{ selectedClient.phone || '--' }}</p>
+            </div>
+            <div>
+              <p class="muted">Tipo/Número ID</p>
+              <p class="value">
+                {{ selectedClient.identification_type || '--' }} {{ selectedClient.identification || '' }}
+              </p>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- Información del Dispositivo -->
+      <article class="card section-card">
+        <h2>Información del Dispositivo</h2>
+
+        <div class="field-inline">
+          <label for="deviceSearch">Buscar Dispositivo por Serial / IMEI</label>
+          <div class="search-row">
+            <input
+              id="deviceSearch"
+              name="deviceSearch"
+              type="text"
+              placeholder="Buscar..."
+              [(ngModel)]="deviceSearch"
+              [ngModelOptions]="{ standalone: true }"
+              readonly
+              (click)="openDeviceSearchModal()"
+            />
+            <button type="button" class="btn-primary" (click)="openDeviceSearchModal()">
+              Buscar
+            </button>
+          </div>
+          <div class="add-link">
+            <span>¿No encuentras el dispositivo?</span>
+            <button type="button" class="link-btn" (click)="openDeviceModal()">
+              <span class="plus">+</span> Añadir Nuevo Dispositivo
+            </button>
+          </div>
+        </div>
+
+        <div class="selected-card" *ngIf="selectedDevice">
+          <div class="selected-header">
+            <div>
+              <h3>Dispositivo Seleccionado</h3>
+              <p class="muted">Si no es el correcto, puedes cambiarlo.</p>
+            </div>
+            <button type="button" class="link-btn small" (click)="clearDeviceSelection()">Cambiar / limpiar</button>
+          </div>
+          <div class="grid-2">
+            <div>
+              <p class="muted">Tipo</p>
+              <p class="value">{{ selectedDevice.type }}</p>
+            </div>
+            <div>
+              <p class="muted">Marca</p>
+              <p class="value">{{ selectedDevice.brand }}</p>
+            </div>
+            <div>
+              <p class="muted">Modelo</p>
+              <p class="value">{{ selectedDevice.model }}</p>
+            </div>
+            <div>
+              <p class="muted">Serial / IMEI</p>
+              <p class="value">{{ selectedDevice.serial || selectedDevice.imei || '--' }}</p>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- Detalles del Ticket -->
+      <article class="card">
+        <h2>Detalles del Ticket</h2>
+        <div class="field">
+          <label>Descripción de la Falla</label>
+          <textarea
+            formControlName="failure_desc"
+            rows="3"
+            placeholder="Describe el problema reportado por el cliente..."
+          ></textarea>
+        </div>
+        <div class="field">
+          <label>Diagnóstico</label>
+          <textarea
+            formControlName="diagnosis"
+            rows="3"
+            placeholder="Diagnóstico inicial del técnico (opcional)..."
+          ></textarea>
+        </div>
+        <div class="grid-2">
+          <div class="field">
+            <label>Presupuesto (COP)</label>
+            <div class="input-prefix">
+              <span>$</span>
+              <input formControlName="cost_estimate" type="number" placeholder="0" />
+            </div>
+          </div>
+          <div class="field">
+            <label>Asignar a Técnico</label>
+            <select formControlName="assignee_user_id">
+              <option value="">Seleccionar técnico</option>
+              <option *ngFor="let tech of technicians" [value]="tech.id">
+                {{ tech.full_name }}
+              </option>
+            </select>
+          </div>
+        </div>
+      </article>
+
+      <div class="form-actions">
+        <a class="btn-outline" routerLink="/tickets">Cancelar</a>
+        <button class="btn-primary" type="submit" [disabled]="saving">
+          {{ saving ? 'Guardando...' : 'Guardar Ticket' }}
+        </button>
+      </div>
+    </form>
+
+    <div class="loading-overlay" *ngIf="loading || saving">
+      <div class="spinner-border" role="status"></div>
+      <p>{{ loading ? 'Cargando formulario...' : 'Guardando ticket...' }}</p>
+    </div>
+
+    <div
+      class="overlay-backdrop"
+      *ngIf="creatingClient || creatingDevice || saving"
+      aria-label="overlay-loading"
+    >
+      <div class="overlay-content">
+        <div class="spinner-border" role="status"></div>
+        <p>
+          {{
+            creatingClient
+              ? 'Guardando cliente...'
+              : creatingDevice
+              ? 'Guardando dispositivo...'
+              : 'Guardando ticket...'
+          }}
+        </p>
+      </div>
+    </div>
+
+    <!-- Modal Buscar Cliente -->
+    <div class="modal-backdrop" *ngIf="showClientSearchModal">
+      <div class="search-modal">
+        <div class="search-modal-header">
+          <h3>Buscar Cliente</h3>
+          <button type="button" class="modal-close-btn" (click)="closeClientSearchModal()">
+            <span>×</span>
+          </button>
+        </div>
+        <div class="search-modal-body">
+          <div class="search-input-wrapper">
+            <span class="search-icon">🔍</span>
+            <input
+              type="text"
+              placeholder="Buscar cliente por nombre, email o ID"
+              [(ngModel)]="clientSearchModalQuery"
+              [ngModelOptions]="{ standalone: true }"
+              (ngModelChange)="onClientSearchInput()"
+              (keyup.enter)="performClientSearch()"
+            />
+          </div>
+          <div class="search-results-container" *ngIf="clientSearchModalQuery">
+            <div class="search-loading" *ngIf="searchingClient">
+              <p>Cargando...</p>
+            </div>
+            <div class="search-results-list" *ngIf="!searchingClient && filteredClients.length > 0">
+              <button
+                type="button"
+                class="search-result-item"
+                *ngFor="let c of filteredClients"
+                (click)="selectClientFromModal(c)"
+              >
+                <div class="result-info">
+                  <strong>{{ c.full_name }}</strong>
+                  <span class="result-email">{{ c.email }}</span>
+                  <span class="result-phone" *ngIf="c.phone">{{ c.phone }}</span>
+                  <span class="result-id" *ngIf="c.identification">
+                    {{ c.identification_type || 'ID' }}: {{ c.identification }}
+                  </span>
+                </div>
+                <span class="result-action">Seleccionar</span>
+              </button>
+            </div>
+            <div class="search-no-results" *ngIf="!searchingClient && filteredClients.length === 0 && clientSearchModalQuery.length > 0">
+              <p>No se encontraron clientes</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Buscar Dispositivo -->
+    <div class="modal-backdrop" *ngIf="showDeviceSearchModal">
+      <div class="search-modal">
+        <div class="search-modal-header">
+          <h3>Buscar Dispositivo</h3>
+          <button type="button" class="modal-close-btn" (click)="closeDeviceSearchModal()">
+            <span>×</span>
+          </button>
+        </div>
+        <div class="search-modal-body">
+          <div class="search-input-wrapper">
+            <span class="search-icon">🔍</span>
+            <input
+              type="text"
+              placeholder="Buscar dispositivo por serial, IMEI, marca o modelo"
+              [(ngModel)]="deviceSearchModalQuery"
+              [ngModelOptions]="{ standalone: true }"
+              (ngModelChange)="onDeviceSearchInput()"
+              (keyup.enter)="performDeviceSearch()"
+            />
+          </div>
+          <div class="search-results-container" *ngIf="deviceSearchModalQuery">
+            <div class="search-loading" *ngIf="searchingDevice">
+              <p>Cargando...</p>
+            </div>
+            <div class="search-results-list" *ngIf="!searchingDevice && filteredDevices.length > 0">
+              <button
+                type="button"
+                class="search-result-item"
+                *ngFor="let d of filteredDevices"
+                (click)="selectDeviceFromModal(d)"
+              >
+                <div class="result-info">
+                  <strong>{{ d.brand }} {{ d.model }}</strong>
+                  <span class="result-type">Tipo: {{ d.type }}</span>
+                  <span class="result-serial" *ngIf="d.serial">Serial: {{ d.serial }}</span>
+                  <span class="result-imei" *ngIf="d.imei">IMEI: {{ d.imei }}</span>
+                </div>
+                <span class="result-action">Seleccionar</span>
+              </button>
+            </div>
+            <div class="search-no-results" *ngIf="!searchingDevice && filteredDevices.length === 0 && deviceSearchModalQuery.length > 0">
+              <p>No se encontraron dispositivos</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Crear Cliente -->
+    <div class="modal-backdrop" *ngIf="showClientModal">
+      <div class="modal">
+        <div class="modal-header">
+          <div>
+            <h3>Crear Nuevo Cliente</h3>
+            <p class="muted">Introduce los datos del nuevo cliente.</p>
+          </div>
+          <button type="button" class="close" (click)="closeClientModal()">×</button>
+        </div>
+        <div class="modal-body">
+          <form [formGroup]="newClientForm">
+            <label class="field">
+              <span>Nombre Completo</span>
+              <input formControlName="full_name" placeholder="Ej: Ana López" />
+            </label>
+            <label class="field">
+              <span>Email</span>
+              <input formControlName="email" type="email" placeholder="Ej: ana@email.com" />
+            </label>
+            <label class="field">
+              <span>Número de Teléfono</span>
+              <input formControlName="phone" type="tel" placeholder="Ej: 300 000 0000" />
+            </label>
+            <div class="grid-2">
+              <label class="field">
+                <span>Identificación</span>
+                <input formControlName="identification" placeholder="Número de documento" />
+              </label>
+              <label class="field">
+                <span>Tipo de Identificación</span>
+                <select formControlName="identification_type">
+                  <option value="">Seleccionar</option>
+                  <option value="CC">Cédula</option>
+                  <option value="NIT">NIT</option>
+                  <option value="PASS">Pasaporte</option>
+                </select>
+              </label>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-outline" (click)="closeClientModal()">Cancelar</button>
+          <button type="button" class="btn-primary" (click)="saveNewClient()" [disabled]="creatingClient">
+            {{ creatingClient ? 'Guardando...' : 'Guardar Cliente' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Crear Dispositivo -->
+    <div class="modal-backdrop" *ngIf="showDeviceModal">
+      <div class="modal">
+        <div class="modal-header">
+          <div>
+            <h3>Añadir Nuevo Dispositivo</h3>
+            <p class="muted">Introduce los detalles del nuevo dispositivo para registrarlo.</p>
+          </div>
+          <button type="button" class="close" (click)="closeDeviceModal()">×</button>
+        </div>
+        <div class="modal-body">
+          <form [formGroup]="newDeviceForm">
+            <div class="device-modal-grid">
+              <label class="field">
+                <span>Fabricante</span>
+                <select
+                  formControlName="manufacturer_id"
+                  (change)="onManufacturerChange($any($event.target).value ? +$any($event.target).value : null)"
+                >
+                  <option value="">Seleccionar fabricante</option>
+                  <option *ngFor="let m of manufacturers" [value]="m.id">{{ m.name }}</option>
+                </select>
+              </label>
+              <label class="field">
+                <span>Modelo</span>
+                <select
+                  formControlName="model_id"
+                  (change)="onModelChange($any($event.target).value ? +$any($event.target).value : null)"
+                  [disabled]="!models.length"
+                >
+                  <option value="">Seleccionar modelo</option>
+                  <option *ngFor="let m of models" [value]="m.id">{{ m.name }}</option>
+                </select>
+              </label>
+              <label class="field">
+                <span>Variante</span>
+                <select
+                  formControlName="variant_id"
+                  (change)="onVariantChange($any($event.target).value ? +$any($event.target).value : null)"
+                  [disabled]="!variants.length"
+                >
+                  <option value="">Seleccionar variante</option>
+                  <option *ngFor="let v of variants" [value]="v.id">
+                    {{ v.variant_name || 'Variante' }} -
+                    {{ v.storage_gb ? v.storage_gb + 'GB' : '' }}
+                    {{ v.ram_gb ? '/ ' + v.ram_gb + 'GB RAM' : '' }}
+                    {{ v.color ? ' - ' + v.color : '' }}
+                  </option>
+                </select>
+              </label>
+              <label class="field">
+                <span>Tipo de Dispositivo</span>
+                <input formControlName="type" placeholder="Ej: PHONE" />
+              </label>
+              <label class="field">
+                <span>Marca (auto)</span>
+                <input formControlName="brand" placeholder="Ej: Samsung" readonly />
+              </label>
+              <label class="field">
+                <span>Modelo (auto)</span>
+                <input formControlName="model" placeholder="Ej: Galaxy S22" readonly />
+              </label>
+              <label class="field">
+                <span>Serial / IMEI</span>
+                <input formControlName="serial" placeholder="Introduce el número" />
+              </label>
+              <label class="field">
+                <span>IMEI (opcional)</span>
+                <input formControlName="imei" placeholder="IMEI" />
+              </label>
+            </div>
+            <label class="field">
+              <span>Imagen Opcional</span>
+              <div class="upload-box">
+                <input type="file" (change)="onDeviceFileChange($event)" />
+                <p *ngIf="deviceFile">{{ deviceFile.name }}</p>
+                <p *ngIf="!deviceFile" class="muted">Haz clic para subir o arrastra y suelta</p>
+              </div>
+            </label>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-outline" (click)="closeDeviceModal()">Cancelar</button>
+          <button type="button" class="btn-primary" (click)="saveNewDevice()" [disabled]="creatingDevice">
+            {{ creatingDevice ? 'Guardando...' : 'Guardar y Vincular' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+</app-authenticated-layout>

@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block content %}
+<p class="greeting" style="font-size: 18px; color: #333333; margin: 0 0 20px 0;">
+    Hola <strong>{{ client_name }}</strong>,
+</p>
+
+<p class="message" style="font-size: 15px; color: #555555; line-height: 1.6; margin: 0 0 24px 0;">
+    Hemos recibido la aprobación de la cotización para la reparación de tu equipo. ¡Ya estamos trabajando en él!
+</p>
+
+<!-- Status Box - Approved -->
+<div class="status-box" style="background-color: #f0fdf4; border-left: 4px solid #22c55e; padding: 20px 24px; margin: 24px 0; border-radius: 0 8px 8px 0;">
+    <p class="status-label" style="font-size: 12px; color: #166534; text-transform: uppercase; letter-spacing: 0.5px; margin: 0 0 8px 0;">Cotización</p>
+    <p class="status-value" style="font-size: 20px; font-weight: 600; color: #166534; margin: 0;">✅ Aprobada</p>
+</div>
+
+<!-- Service Details -->
+<table role="presentation" cellspacing="0" cellpadding="0" width="100%" style="background-color: #f8f9fa; border-radius: 8px; margin: 24px 0; border: 0;">
+    <tr>
+        <td style="padding: 24px;">
+            <h3 style="font-size: 16px; color: #333333; margin: 0 0 16px 0;">Detalles de la reparación</h3>
+            <table role="presentation" cellspacing="0" cellpadding="0" width="100%" style="border: 0;">
+                <tr>
+                    <td style="padding: 12px 0; border-bottom: 1px solid #e5e5e5;">
+                        <span style="font-size: 14px; color: #666666;">Código de seguimiento</span>
+                    </td>
+                    <td style="padding: 12px 0; border-bottom: 1px solid #e5e5e5; text-align: right;">
+                        <strong style="font-size: 14px; color: #1a5c3a; font-family: monospace;">{{ tracking_code }}</strong>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px 0; border-bottom: 1px solid #e5e5e5;">
+                        <span style="font-size: 14px; color: #666666;">Equipo</span>
+                    </td>
+                    <td style="padding: 12px 0; border-bottom: 1px solid #e5e5e5; text-align: right;">
+                        <span style="font-size: 14px; color: #333333;">{{ device_brand }} {{ device_model }}</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px 0; border-bottom: 1px solid #e5e5e5;">
+                        <span style="font-size: 14px; color: #666666;">Costo aprobado</span>
+                    </td>
+                    <td style="padding: 12px 0; border-bottom: 1px solid #e5e5e5; text-align: right;">
+                        <strong style="font-size: 16px; color: #1a5c3a;">${{ "{:,.0f}".format(cost_estimate) }}</strong>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px 0;">
+                        <span style="font-size: 14px; color: #666666;">Fecha de aprobación</span>
+                    </td>
+                    <td style="padding: 12px 0; text-align: right;">
+                        <span style="font-size: 14px; color: #333333;">{{ approval_date }}</span>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+
+<!-- Next Steps -->
+<div style="background-color: #fff7ed; border: 1px solid #fdba74; border-radius: 8px; padding: 20px; margin: 24px 0;">
+    <h4 style="font-size: 15px; color: #c2410c; margin: 0 0 12px 0;">📋 Próximos pasos</h4>
+    <ol style="font-size: 14px; color: #9a3412; line-height: 1.8; margin: 0; padding-left: 20px;">
+        <li>Nuestros técnicos ya están trabajando en tu equipo</li>
+        <li>Te notificaremos cuando la reparación esté completa</li>
+        <li>Podrás pasar a recoger tu equipo una vez esté listo</li>
+        <li>El pago se realizará al momento de la entrega</li>
+    </ol>
+</div>
+
+<!-- CTA Button -->
+<div style="text-align: center; margin: 32px 0;">
+    <a href="{{ portal_url }}" class="cta-button" style="display: inline-block; background-color: #1a5c3a; color: #ffffff !important; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-size: 15px; font-weight: 600;">
+        Ver estado en tiempo real
+    </a>
+</div>
+{% endblock %}

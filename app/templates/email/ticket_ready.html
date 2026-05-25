@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block content %}
+<p class="greeting" style="font-size: 18px; color: #333333; margin: 0 0 20px 0;">
+    Hola <strong>{{ client_name }}</strong>,
+</p>
+
+<p class="message" style="font-size: 15px; color: #555555; line-height: 1.6; margin: 0 0 24px 0;">
+    ¡Excelentes noticias! <strong>Tu equipo está listo</strong> y puedes pasar a recogerlo.
+</p>
+
+<!-- Status Box - Success -->
+<div class="status-box" style="background-color: #d1fae5; border-left: 4px solid #10b981; padding: 20px 24px; margin: 24px 0; border-radius: 0 8px 8px 0;">
+    <p class="status-label" style="font-size: 12px; color: #047857; text-transform: uppercase; letter-spacing: 0.5px; margin: 0 0 8px 0;">Estado actual</p>
+    <p class="status-value" style="font-size: 20px; font-weight: 600; color: #047857; margin: 0;">✅ Listo para Recoger</p>
+</div>
+
+<!-- Ticket Info -->
+<table role="presentation" cellspacing="0" cellpadding="0" width="100%" style="background-color: #f8f9fa; border-radius: 8px; margin: 24px 0; border: 0;">
+    <tr>
+        <td style="padding: 24px;">
+            <table role="presentation" cellspacing="0" cellpadding="0" width="100%" style="border: 0;">
+                <tr>
+                    <td style="padding: 12px 0; border-bottom: 1px solid #e5e5e5;">
+                        <span style="font-size: 14px; color: #666666;">Código de seguimiento</span>
+                    </td>
+                    <td style="padding: 12px 0; border-bottom: 1px solid #e5e5e5; text-align: right;">
+                        <strong style="font-size: 16px; color: #1a5c3a; font-family: monospace;">{{ tracking_code }}</strong>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px 0; border-bottom: 1px solid #e5e5e5;">
+                        <span style="font-size: 14px; color: #666666;">Equipo</span>
+                    </td>
+                    <td style="padding: 12px 0; border-bottom: 1px solid #e5e5e5; text-align: right;">
+                        <strong style="font-size: 14px; color: #333333;">{{ device_brand }} {{ device_model }}</strong>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px 0;">
+                        <span style="font-size: 14px; color: #666666;">Total a pagar</span>
+                    </td>
+                    <td style="padding: 12px 0; text-align: right;">
+                        <strong style="font-size: 18px; color: #1a5c3a;">${{ "{:,.0f}".format(total_cost) }}</strong>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+
+<!-- Pickup Info -->
+<div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 24px; margin: 24px 0; text-align: center;">
+    <h3 style="font-size: 18px; color: #166534; margin: 0 0 16px 0;">📍 ¿Dónde recoger tu equipo?</h3>
+    <p style="font-size: 15px; color: #333333; line-height: 1.6; margin: 0 0 8px 0;">
+        <strong>{{ company_name }}</strong>
+    </p>
+    <p style="font-size: 14px; color: #666666; margin: 0 0 16px 0;">
+        {{ company_address }}
+    </p>
+    <p style="font-size: 14px; color: #666666; margin: 0;">
+        📞 {{ company_phone }}
+    </p>
+</div>
+
+<!-- Alert -->
+<div style="background-color: #fef3c7; border: 1px solid #fde68a; border-radius: 8px; padding: 16px 20px; margin: 24px 0;">
+    <p style="font-size: 13px; color: #92400e; margin: 0; line-height: 1.5;">
+        <strong>Recuerda:</strong> Para recoger tu equipo necesitarás presentar tu documento de identidad y el código de seguimiento. El pago se realiza al momento de la entrega.
+    </p>
+</div>
+
+<!-- CTA Button -->
+<div style="text-align: center; margin: 32px 0;">
+    <a href="{{ portal_url }}" class="cta-button" style="display: inline-block; background-color: #1a5c3a; color: #ffffff !important; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-size: 15px; font-weight: 600;">
+        Ver detalles del servicio
+    </a>
+</div>
+{% endblock %}

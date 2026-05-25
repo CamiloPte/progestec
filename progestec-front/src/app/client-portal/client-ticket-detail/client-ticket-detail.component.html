@@ -1,0 +1,226 @@
+<!-- src/app/client-portal/client-ticket-detail/client-ticket-detail.component.html -->
+<div class="client-page">
+  <header class="page-header">
+    <button class="btn-back" (click)="goBack()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M19 12H5M12 19l-7-7 7-7"/>
+      </svg>
+      Volver
+    </button>
+    <h1>Detalle del Ticket</h1>
+  </header>
+
+  @if (loading) {
+    <div class="loading-container">
+      <div class="spinner"></div>
+      <p>Cargando información...</p>
+    </div>
+  } @else if (error) {
+    <div class="error-container">
+      <span class="error-icon">⚠️</span>
+      <p>{{ error }}</p>
+      <button class="btn-primary" (click)="goBack()">Volver a mis tickets</button>
+    </div>
+  } @else if (ticket) {
+    <!-- Banner de estado especial -->
+    @if (needsApproval()) {
+      <div class="alert-banner approval-required">
+        <div class="banner-content">
+          <span class="banner-icon">⚠️</span>
+          <div class="banner-text">
+            <strong>Presupuesto pendiente de aprobación</strong>
+            <p>Revisa el diagnóstico y decide si deseas continuar con la reparación.</p>
+          </div>
+        </div>
+      </div>
+    }
+
+    @if (isReady()) {
+      <div class="alert-banner ready-pickup">
+        <div class="banner-content">
+          <span class="banner-icon">✅</span>
+          <div class="banner-text">
+            <strong>¡Tu equipo está listo!</strong>
+            <p>Puedes pasar a recogerlo en nuestras instalaciones.</p>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Información principal -->
+    <div class="ticket-main-card">
+      <div class="ticket-header">
+        <div class="ticket-code-section">
+          <span class="label">Código de seguimiento</span>
+          <span class="ticket-code">{{ ticket.tracking_code }}</span>
+        </div>
+        <div class="ticket-status">
+          <span class="status-badge" [style.background]="getStatusColor()">
+            {{ ticket.status?.name }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Barra de progreso -->
+      <div class="progress-section">
+        <div class="progress-header">
+          <span>Progreso del servicio</span>
+          <span class="progress-percent">{{ getProgressPercent() }}%</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" [style.width.%]="getProgressPercent()" [style.background]="getStatusColor()"></div>
+        </div>
+        <div class="progress-steps">
+          <div class="step" [class.completed]="getProgressPercent() >= 10">Recibido</div>
+          <div class="step" [class.completed]="getProgressPercent() >= 25">Diagnóstico</div>
+          <div class="step" [class.completed]="getProgressPercent() >= 45">Aprobado</div>
+          <div class="step" [class.completed]="getProgressPercent() >= 60">En reparación</div>
+          <div class="step" [class.completed]="getProgressPercent() >= 85">Listo</div>
+          <div class="step" [class.completed]="getProgressPercent() >= 100">Entregado</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Información del dispositivo -->
+    <div class="info-card">
+      <h3>Dispositivo</h3>
+      <div class="info-grid">
+        <div class="info-item">
+          <span class="label">Tipo</span>
+          <span class="value">{{ ticket.device?.type }}</span>
+        </div>
+        <div class="info-item">
+          <span class="label">Marca</span>
+          <span class="value">{{ ticket.device?.brand }}</span>
+        </div>
+        <div class="info-item">
+          <span class="label">Modelo</span>
+          <span class="value">{{ ticket.device?.model }}</span>
+        </div>
+        @if (ticket.device?.serial) {
+          <div class="info-item">
+            <span class="label">Serial</span>
+            <span class="value">{{ ticket.device?.serial }}</span>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Problema reportado -->
+    <div class="info-card">
+      <h3>Problema reportado</h3>
+      <p class="description">{{ ticket.failure_desc }}</p>
+    </div>
+
+    <!-- Diagnóstico -->
+    @if (ticket.diagnosis) {
+      <div class="info-card">
+        <h3>Diagnóstico técnico</h3>
+        <p class="description">{{ ticket.diagnosis }}</p>
+      </div>
+    }
+
+    <!-- Presupuesto y aprobación -->
+    @if (ticket.cost_estimate) {
+      <div class="info-card budget-card" [class.needs-approval]="needsApproval()">
+        <h3>Presupuesto</h3>
+        <div class="budget-amount">${{ ticket.cost_estimate | number:'1.0-0' }}</div>
+        
+        @if (needsApproval()) {
+          <div class="approval-section">
+            <p class="approval-text">
+              Para continuar con la reparación, necesitamos tu aprobación del presupuesto.
+            </p>
+            <div class="approval-buttons">
+              <button class="btn-approve" (click)="approveBudget()" [disabled]="approvingBudget">
+                @if (approvingBudget) {
+                  Procesando...
+                } @else {
+                  Aprobar presupuesto
+                }
+              </button>
+              <button class="btn-reject" (click)="rejectBudget()" [disabled]="approvingBudget">
+                Rechazar
+              </button>
+            </div>
+          </div>
+        } @else if (isApproved()) {
+          <div class="approval-status approved">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+              <polyline points="22 4 12 14.01 9 11.01"/>
+            </svg>
+            Presupuesto aprobado
+          </div>
+        } @else if (isCancelled()) {
+          <div class="approval-status rejected">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="15" y1="9" x2="9" y2="15"/>
+              <line x1="9" y1="9" x2="15" y2="15"/>
+            </svg>
+            Presupuesto rechazado
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Fechas importantes -->
+    <div class="info-card">
+      <h3>Fechas</h3>
+      <div class="dates-grid">
+        <div class="date-item">
+          <span class="date-label">Ingreso</span>
+          <span class="date-value">{{ ticket.intake_at | date:'dd/MM/yyyy HH:mm' }}</span>
+        </div>
+        @if (ticket.ready_at) {
+          <div class="date-item">
+            <span class="date-label">Listo</span>
+            <span class="date-value">{{ ticket.ready_at | date:'dd/MM/yyyy HH:mm' }}</span>
+          </div>
+        }
+        @if (ticket.delivered_at) {
+          <div class="date-item">
+            <span class="date-label">Entregado</span>
+            <span class="date-value">{{ ticket.delivered_at | date:'dd/MM/yyyy HH:mm' }}</span>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Historial -->
+    @if (ticket.history && ticket.history.length > 0) {
+      <div class="info-card">
+        <h3>Historial de actividad</h3>
+        <div class="timeline">
+          @for (item of ticket.history; track item.id) {
+            <div class="timeline-item">
+              <div class="timeline-dot"></div>
+              <div class="timeline-content">
+                <span class="timeline-date">{{ item.created_at | date:'dd/MM/yyyy HH:mm' }}</span>
+                <span class="timeline-action">{{ item.user_name || 'Sistema' }}</span>
+                <p class="timeline-note">{{ item.note }}</p>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Acciones -->
+    <div class="actions-section">
+      <button class="btn-secondary" (click)="downloadReceptionPdf()" [disabled]="downloadingPdf">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="7 10 12 15 17 10"/>
+          <line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+        @if (downloadingPdf) {
+          Descargando...
+        } @else {
+          Descargar comprobante
+        }
+      </button>
+    </div>
+  }
+</div>

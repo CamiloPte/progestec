@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block content %}
+<p class="greeting" style="font-size: 18px; color: #333333; margin: 0 0 20px 0;">
+    Hola <strong>{{ client_name }}</strong>,
+</p>
+
+<p class="message" style="font-size: 15px; color: #555555; line-height: 1.6; margin: 0 0 24px 0;">
+    Hemos preparado la cotización para la reparación de tu equipo. <strong>Necesitamos tu aprobación</strong> para continuar con el trabajo.
+</p>
+
+<!-- Status Box - Warning style -->
+<div class="status-box" style="background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 20px 24px; margin: 24px 0; border-radius: 0 8px 8px 0;">
+    <p class="status-label" style="font-size: 12px; color: #b45309; text-transform: uppercase; letter-spacing: 0.5px; margin: 0 0 8px 0;">⚠️ Acción requerida</p>
+    <p class="status-value" style="font-size: 20px; font-weight: 600; color: #b45309; margin: 0;">Esperando tu aprobación</p>
+</div>
+
+<!-- Ticket Info -->
+<table role="presentation" cellspacing="0" cellpadding="0" width="100%" style="background-color: #f8f9fa; border-radius: 8px; margin: 24px 0; border: 0;">
+    <tr>
+        <td style="padding: 24px;">
+            <table role="presentation" cellspacing="0" cellpadding="0" width="100%" style="border: 0;">
+                <tr>
+                    <td style="padding: 12px 0; border-bottom: 1px solid #e5e5e5;">
+                        <span style="font-size: 14px; color: #666666;">Código de seguimiento</span>
+                    </td>
+                    <td style="padding: 12px 0; border-bottom: 1px solid #e5e5e5; text-align: right;">
+                        <strong style="font-size: 16px; color: #1a5c3a; font-family: monospace;">{{ tracking_code }}</strong>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px 0; border-bottom: 1px solid #e5e5e5;">
+                        <span style="font-size: 14px; color: #666666;">Equipo</span>
+                    </td>
+                    <td style="padding: 12px 0; border-bottom: 1px solid #e5e5e5; text-align: right;">
+                        <strong style="font-size: 14px; color: #333333;">{{ device_brand }} {{ device_model }}</strong>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px 0;">
+                        <span style="font-size: 14px; color: #666666;">Problema</span>
+                    </td>
+                    <td style="padding: 12px 0; text-align: right;">
+                        <span style="font-size: 14px; color: #333333;">{{ failure_desc }}</span>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+
+<!-- Budget Box -->
+<div style="background-color: #1a5c3a; border-radius: 12px; padding: 32px; margin: 24px 0; text-align: center;">
+    <p style="font-size: 14px; color: rgba(255,255,255,0.8); margin: 0 0 8px 0; text-transform: uppercase; letter-spacing: 1px;">Costo estimado de reparación</p>
+    <p style="font-size: 42px; font-weight: 700; color: #ffffff; margin: 0;">
+        ${{ "{:,.0f}".format(cost_estimate) }}
+    </p>
+    <p style="font-size: 13px; color: rgba(255,255,255,0.7); margin: 12px 0 0 0;">
+        *El precio puede variar según hallazgos adicionales durante la reparación
+    </p>
+</div>
+
+{% if diagnosis %}
+<!-- Diagnosis Section -->
+<div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 20px; margin: 24px 0;">
+    <h3 style="font-size: 14px; color: #166534; margin: 0 0 8px 0;">📋 Diagnóstico</h3>
+    <p style="font-size: 14px; color: #333333; line-height: 1.5; margin: 0;">
+        {{ diagnosis }}
+    </p>
+</div>
+{% endif %}
+
+<p class="message" style="font-size: 15px; color: #555555; line-height: 1.6; margin: 24px 0; text-align: center;">
+    Para <strong>aprobar o rechazar</strong> esta cotización, ingresa a tu portal de cliente:
+</p>
+
+<!-- CTA Button -->
+<div style="text-align: center; margin: 32px 0;">
+    <a href="{{ portal_url }}" class="cta-button" style="display: inline-block; background-color: #1a5c3a; color: #ffffff !important; text-decoration: none; padding: 16px 40px; border-radius: 8px; font-size: 16px; font-weight: 600;">
+        Revisar y aprobar cotización
+    </a>
+</div>
+
+<!-- Warning Note -->
+<div style="background-color: #fef3c7; border: 1px solid #fde68a; border-radius: 8px; padding: 16px 20px; margin: 24px 0;">
+    <p style="font-size: 13px; color: #92400e; margin: 0; line-height: 1.5;">
+        <strong>Importante:</strong> Si no recibimos tu aprobación en los próximos 7 días, el equipo quedará en espera. Puedes contactarnos si tienes alguna pregunta.
+    </p>
+</div>
+{% endblock %}

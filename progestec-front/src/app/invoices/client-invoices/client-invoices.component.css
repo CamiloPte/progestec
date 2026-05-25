@@ -1,0 +1,178 @@
+/* =====================================================
+   CLIENT INVOICES - ELEGANT PORTAL DESIGN
+   Sistema de diseño unificado con verde primario y dorado
+   ===================================================== */
+
+:host {
+  --primary: #1a5c3a;
+  --primary-light: #238c58;
+  --primary-dark: #0f3d26;
+  --secondary: #c9a227;
+  --secondary-light: #e3be4f;
+  --text-dark: #1a1a2e;
+  --text-muted: #64748b;
+  --text-light: #94a3b8;
+  --bg-light: #f8fafc;
+  --bg-card: #ffffff;
+  --border-light: #e2e8f0;
+  --success: #16a34a;
+  --warning: #d97706;
+  --danger: #dc2626;
+  --shadow-sm: 0 2px 8px rgba(26, 92, 58, 0.08);
+  --shadow-md: 0 8px 24px rgba(26, 92, 58, 0.12);
+  --shadow-lg: 0 20px 40px rgba(26, 92, 58, 0.15);
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+}
+
+.page-wrapper {
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  background: linear-gradient(135deg, #f0fdf4 0%, #f8fafc 50%, #fffef5 100%);
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+
+.card {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--border-light);
+  transition: all 0.3s ease;
+}
+
+.card:hover {
+  box-shadow: var(--shadow-lg);
+}
+
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--primary);
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border-light);
+  font-size: 0.9rem;
+}
+
+th {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--primary);
+  font-weight: 700;
+  background: linear-gradient(135deg, rgba(26, 92, 58, 0.05) 0%, rgba(201, 162, 39, 0.03) 100%);
+  border-bottom: 2px solid rgba(26, 92, 58, 0.1);
+}
+
+tr {
+  transition: all 0.2s ease;
+}
+
+tbody tr:hover {
+  background: rgba(26, 92, 58, 0.03);
+}
+
+tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.center {
+  text-align: center;
+}
+
+.muted {
+  color: var(--text-light);
+}
+
+.error {
+  color: var(--danger);
+  font-weight: 500;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.35rem 0.9rem;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 0.8rem;
+  letter-spacing: 0.02em;
+}
+
+.status-badge.success {
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+  color: #15803d;
+  border: 1px solid rgba(21, 128, 61, 0.2);
+}
+
+.status-badge.warning {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  color: #b45309;
+  border: 1px solid rgba(180, 83, 9, 0.2);
+}
+
+.status-badge.gray {
+  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+  color: #475569;
+  border: 1px solid rgba(71, 85, 105, 0.2);
+}
+
+.link {
+  color: var(--primary);
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.link:hover {
+  color: var(--primary-light);
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  .page-wrapper {
+    padding: 1rem;
+  }
+  
+  .card {
+    padding: 1.25rem;
+    border-radius: var(--radius-md);
+  }
+  
+  th,
+  td {
+    padding: 0.75rem;
+    font-size: 0.85rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .page-wrapper {
+    padding: 0.75rem;
+  }
+  
+  .card {
+    padding: 1rem;
+  }
+}

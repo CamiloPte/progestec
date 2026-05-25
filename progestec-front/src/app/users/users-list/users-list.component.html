@@ -1,0 +1,390 @@
+<app-authenticated-layout>
+<div class="users-container">
+  <!-- Header -->
+  <header class="page-header">
+    <div class="header-content">
+      <div class="header-title">
+        <h1>Gestión de Usuarios</h1>
+        <p>Administra, busca y filtra todos los usuarios del sistema.</p>
+      </div>
+      <button class="btn-primary" (click)="openCreateModal()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+        Nuevo Usuario
+      </button>
+    </div>
+  </header>
+
+  <!-- Filtros -->
+  <section class="filters-section">
+    <div class="filters-card">
+      <h3>Filtros y Búsqueda</h3>
+      <div class="filters-row">
+        <div class="filter-group">
+          <select [(ngModel)]="selectedRole" (change)="applyFilters()" class="filter-select">
+            <option value="">Todos los Roles</option>
+            @for (role of roles; track role.id) {
+              <option [value]="role.name">{{ role.label }}</option>
+            }
+          </select>
+        </div>
+        <div class="filter-group search-group">
+          <input 
+            type="text" 
+            [(ngModel)]="searchTerm" 
+            (input)="applyFilters()"
+            placeholder="Buscar por nombre, email, teléfono..."
+            class="search-input"
+          />
+          <button class="btn-search" (click)="applyFilters()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"></circle>
+              <path d="m21 21-4.3-4.3"></path>
+            </svg>
+            Buscar
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Contenido principal -->
+  <section class="content-section">
+    @if (loading) {
+      <div class="loading-state">
+        <div class="spinner"></div>
+        <p>Cargando usuarios...</p>
+      </div>
+    } @else if (error) {
+      <div class="error-state">
+        <span class="error-icon">⚠️</span>
+        <p>{{ error }}</p>
+        <button class="btn-primary" (click)="loadUsers()">Reintentar</button>
+      </div>
+    } @else if (filteredUsers.length === 0) {
+      <div class="empty-state">
+        <span class="empty-icon">👥</span>
+        <p>No se encontraron usuarios</p>
+      </div>
+    } @else {
+      <!-- Tabla Desktop -->
+      <div class="table-container">
+        <table class="users-table">
+          <thead>
+            <tr>
+              <th>Nombre Completo</th>
+              <th>Email</th>
+              <th>Rol</th>
+              <th>Teléfono</th>
+              <th>Tipo de Identificación</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (user of filteredUsers; track user.id) {
+              <tr>
+                <td>
+                  <div class="user-name">{{ user.full_name || 'Sin nombre' }}</div>
+                </td>
+                <td>
+                  <div class="user-email">{{ user.email }}</div>
+                </td>
+                <td>
+                  <span class="badge" [class]="getRoleBadgeClass(user.role_name)">
+                    {{ getRoleLabel(user.role_name) }}
+                  </span>
+                </td>
+                <td>
+                  <div class="user-phone">{{ user.phone || '—' }}</div>
+                </td>
+                <td>
+                  <div class="user-id-type">{{ getIdentificationTypeLabel(user.identification_type) }}</div>
+                </td>
+                <td>
+                  <div class="actions-cell">
+                    <button class="btn-icon" title="Ver detalles" (click)="openViewModal(user)">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                      </svg>
+                    </button>
+                    <button class="btn-icon" title="Editar" (click)="openEditModal(user)">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                      </svg>
+                    </button>
+                    <button class="btn-icon btn-icon-danger" title="Eliminar" (click)="openDeleteModal(user)">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                      </svg>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Cards Mobile -->
+      <div class="mobile-cards">
+        @for (user of filteredUsers; track user.id) {
+          <div class="user-card">
+            <div class="card-header">
+              <div class="user-info">
+                <div class="user-avatar">{{ user.full_name?.charAt(0) || 'U' }}</div>
+                <div class="user-details">
+                  <strong>{{ user.full_name || 'Sin nombre' }}</strong>
+                  <span class="user-email">{{ user.email }}</span>
+                </div>
+              </div>
+              <span class="badge" [class]="getRoleBadgeClass(user.role_name)">
+                {{ getRoleLabel(user.role_name) }}
+              </span>
+            </div>
+            <div class="card-body">
+              <div class="info-row">
+                <span class="label">Teléfono:</span>
+                <span class="value">{{ user.phone || '—' }}</span>
+              </div>
+              <div class="info-row">
+                <span class="label">Identificación:</span>
+                <span class="value">{{ getIdentificationTypeLabel(user.identification_type) }} {{ user.identification }}</span>
+              </div>
+            </div>
+            <div class="card-actions">
+              <button class="btn-action" (click)="openViewModal(user)">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                  <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+                Ver
+              </button>
+              <button class="btn-action" (click)="openEditModal(user)">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                </svg>
+                Editar
+              </button>
+              <button class="btn-action btn-action-danger" (click)="openDeleteModal(user)">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="3 6 5 6 21 6"></polyline>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                </svg>
+                Eliminar
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </section>
+</div>
+
+<!-- Modal: Crear Usuario -->
+@if (showCreateModal) {
+  <div class="modal-overlay" (click)="closeModals()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Crear Nuevo Usuario</h2>
+        <p>Rellena los campos para añadir un nuevo usuario al sistema.</p>
+        <button class="btn-close" (click)="closeModals()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group full-width">
+          <label>Nombre Completo</label>
+          <input type="text" [(ngModel)]="formData.full_name" placeholder="Ej: John Doe" />
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Email</label>
+            <input type="email" [(ngModel)]="formData.email" placeholder="ejemplo@correo.com" />
+          </div>
+          <div class="form-group">
+            <label>Contraseña</label>
+            <input type="password" [(ngModel)]="formData.password" placeholder="••••••••" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Tipo de Identificación</label>
+            <select [(ngModel)]="formData.identification_type">
+              @for (type of identificationTypes; track type.value) {
+                <option [value]="type.value">{{ type.label }}</option>
+              }
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Número de Identificación</label>
+            <input type="text" [(ngModel)]="formData.identification" placeholder="Ej: 123456789" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Teléfono</label>
+            <input type="text" [(ngModel)]="formData.phone" placeholder="Ej: +1 (555) 123-4567" />
+          </div>
+          <div class="form-group">
+            <label>Rol</label>
+            <select [(ngModel)]="formData.role_id">
+              @for (role of roles; track role.id) {
+                <option [value]="role.id">{{ role.label }}</option>
+              }
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" (click)="closeModals()">Cancelar</button>
+        <button class="btn-primary" (click)="createUser()" [disabled]="submitting">
+          {{ submitting ? 'Creando...' : 'Crear Usuario' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Modal: Editar Usuario -->
+@if (showEditModal && selectedUser) {
+  <div class="modal-overlay" (click)="closeModals()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Editar Usuario</h2>
+        <p>Actualiza la información del usuario a continuación.</p>
+        <button class="btn-close" (click)="closeModals()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Nombre Completo</label>
+            <input type="text" [(ngModel)]="formData.full_name" />
+          </div>
+          <div class="form-group">
+            <label>Email</label>
+            <input type="email" [(ngModel)]="formData.email" disabled />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Rol</label>
+            <select [(ngModel)]="formData.role_id">
+              @for (role of roles; track role.id) {
+                <option [value]="role.id">{{ role.label }}</option>
+              }
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Teléfono</label>
+            <input type="text" [(ngModel)]="formData.phone" />
+          </div>
+        </div>
+        <div class="form-group full-width">
+          <label>Tipo de Identificación</label>
+          <select [(ngModel)]="formData.identification_type">
+            @for (type of identificationTypes; track type.value) {
+              <option [value]="type.value">{{ type.label }}</option>
+            }
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" (click)="closeModals()">Cancelar</button>
+        <button class="btn-primary" (click)="updateUser()" [disabled]="submitting">
+          {{ submitting ? 'Guardando...' : 'Guardar Cambios' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Modal: Ver Usuario -->
+@if (showViewModal && selectedUser) {
+  <div class="modal-overlay" (click)="closeModals()">
+    <div class="modal-content modal-view" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Detalle de Usuario</h2>
+        <button class="btn-close" (click)="closeModals()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body view-body">
+        <div class="detail-row">
+          <div class="detail-item">
+            <label>Nombre Completo</label>
+            <span>{{ selectedUser.full_name || 'Sin nombre' }}</span>
+          </div>
+          <div class="detail-item">
+            <label>Email</label>
+            <span>{{ selectedUser.email }}</span>
+          </div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-item">
+            <label>Rol</label>
+            <span class="badge" [class]="getRoleBadgeClass(selectedUser.role_name)">
+              {{ getRoleLabel(selectedUser.role_name) }}
+            </span>
+          </div>
+          <div class="detail-item">
+            <label>Teléfono</label>
+            <span>{{ selectedUser.phone || 'No registrado' }}</span>
+          </div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-item">
+            <label>Tipo de Identificación</label>
+            <span>{{ getIdentificationTypeLabel(selectedUser.identification_type) }}</span>
+          </div>
+          <div class="detail-item">
+            <label>Número de Identificación</label>
+            <span>{{ selectedUser.identification || 'No registrado' }}</span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" (click)="closeModals()">Cerrar</button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Modal: Eliminar Usuario -->
+@if (showDeleteModal && selectedUser) {
+  <div class="modal-overlay" (click)="closeModals()">
+    <div class="modal-content modal-delete" (click)="$event.stopPropagation()">
+      <div class="delete-icon">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="3 6 5 6 21 6"></polyline>
+          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+        </svg>
+      </div>
+      <h2>Eliminar Usuario</h2>
+      <p>¿Estás seguro de que quieres eliminar a <strong>{{ selectedUser.full_name }}</strong>? Esta acción no se puede deshacer.</p>
+      <div class="modal-footer">
+        <button class="btn-secondary" (click)="closeModals()">Cancelar</button>
+        <button class="btn-danger" (click)="deleteUser()" [disabled]="submitting">
+          {{ submitting ? 'Eliminando...' : 'Eliminar' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+</app-authenticated-layout>

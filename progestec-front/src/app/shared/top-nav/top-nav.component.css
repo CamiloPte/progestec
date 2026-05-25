@@ -1,0 +1,222 @@
+/* =====================================================
+   TOP NAVIGATION - UNIFIED DESIGN SYSTEM
+   Primary: #1a5c3a | Secondary: #c9a227
+   ===================================================== */
+
+:host {
+  --primary: #1a5c3a;
+  --primary-light: #2d7a4e;
+  --primary-dark: #0f4429;
+  --secondary: #c9a227;
+  --secondary-light: #d4b23d;
+  --text-dark: #1a1a1a;
+  --text-muted: #6b7280;
+  --bg-white: #ffffff;
+  --border-color: #e5e7eb;
+  --shadow-sm: 0 2px 8px rgba(26, 92, 58, 0.08);
+  --shadow-md: 0 8px 24px rgba(26, 92, 58, 0.12);
+}
+
+.top-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.875rem 1.5rem;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  color: var(--bg-white);
+  box-shadow: var(--shadow-md);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+.top-nav::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--secondary) 0%, var(--secondary-light) 50%, var(--secondary) 100%);
+}
+
+.top-nav-left {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  transition: transform 0.2s ease;
+}
+
+.top-nav-left:hover {
+  transform: scale(1.02);
+}
+
+.top-nav-logo {
+  font-weight: 700;
+  font-size: 1.35rem;
+  letter-spacing: -0.02em;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.top-nav-logo::before {
+  content: '';
+  width: 32px;
+  height: 32px;
+  background: var(--secondary);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.top-nav-center {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.top-nav-center a {
+  padding: 0.5rem 1rem;
+  color: rgba(255, 255, 255, 0.85);
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.top-nav-center a:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--bg-white);
+}
+
+.top-nav-center a.active-link {
+  font-weight: 600;
+  color: var(--bg-white);
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.top-nav-center a.active-link::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 20px;
+  height: 3px;
+  background: var(--secondary);
+  border-radius: 3px;
+}
+
+.top-nav-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.top-nav-user {
+  font-size: 0.9rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 25px;
+}
+
+.top-nav-user::before {
+  content: '👤';
+  font-size: 1rem;
+}
+
+.top-nav-user small {
+  margin-left: 0.25rem;
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 400;
+}
+
+.top-nav-logout {
+  border: none;
+  background: rgba(255, 255, 255, 0.15);
+  color: var(--bg-white);
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.top-nav-logout:hover {
+  background: rgba(239, 68, 68, 0.9);
+  transform: translateY(-1px);
+}
+
+/* ========== MOBILE RESPONSIVENESS ========== */
+
+@media (max-width: 768px) {
+  .top-nav {
+    padding: 0.75rem 1rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  
+  .top-nav-center {
+    order: 3;
+    width: 100%;
+    justify-content: center;
+    padding-top: 0.5rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    margin-top: 0.5rem;
+    display: none; /* Hide on mobile - use sidebar instead */
+  }
+  
+  .top-nav-logo {
+    font-size: 1.1rem;
+  }
+  
+  .top-nav-logo::before {
+    width: 28px;
+    height: 28px;
+  }
+  
+  .top-nav-user {
+    padding: 0.4rem 0.6rem;
+    font-size: 0.8rem;
+  }
+  
+  .top-nav-user span {
+    display: none;
+  }
+  
+  .top-nav-user small {
+    display: none;
+  }
+  
+  .top-nav-logout {
+    padding: 0.4rem 0.75rem;
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .top-nav {
+    padding: 0.625rem 0.75rem;
+  }
+  
+  .top-nav-logo {
+    font-size: 1rem;
+  }
+  
+  .top-nav-logout span {
+    display: none;
+  }
+}

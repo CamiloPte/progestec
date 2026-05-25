@@ -1,0 +1,88 @@
+<!-- src/app/client-portal/client-tickets/client-tickets.component.html -->
+<div class="client-page">
+  <header class="page-header">
+    <button class="btn-back" (click)="goBack()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M19 12H5M12 19l-7-7 7-7"/>
+      </svg>
+      Volver
+    </button>
+    <h1>Mis Tickets</h1>
+  </header>
+
+  <div class="filter-tabs">
+    <button [class.active]="filter === 'all'" (click)="setFilter('all')">Todos</button>
+    <button [class.active]="filter === 'active'" (click)="setFilter('active')">En proceso</button>
+    <button [class.active]="filter === 'completed'" (click)="setFilter('completed')">Finalizados</button>
+  </div>
+
+  @if (loading) {
+    <div class="loading-container">
+      <div class="spinner"></div>
+      <p>Cargando tickets...</p>
+    </div>
+  } @else if (error) {
+    <div class="error-container">
+      <span class="error-icon">⚠️</span>
+      <p>{{ error }}</p>
+      <button class="btn-primary" (click)="loadTickets()">Reintentar</button>
+    </div>
+  } @else if (filteredTickets.length === 0) {
+    <div class="empty-state">
+      <span class="empty-icon">📋</span>
+      <h3>No hay tickets</h3>
+      <p>No tienes tickets en esta categoría.</p>
+    </div>
+  } @else {
+    <div class="tickets-list">
+      @for (ticket of filteredTickets; track ticket.id) {
+        <div class="ticket-card" (click)="navigateToTicket(ticket.id)">
+          <div class="ticket-main">
+            <div class="ticket-header">
+              <span class="ticket-code">{{ ticket.tracking_code }}</span>
+              <span class="badge" [class]="getStatusBadgeClass(ticket.status_code)">
+                {{ ticket.status_name }}
+              </span>
+            </div>
+            <div class="ticket-device">{{ ticket.device_label }}</div>
+            <div class="ticket-problem">{{ ticket.failure_desc }}</div>
+            
+            <div class="progress-container">
+              <div class="progress-bar">
+                <div class="progress-fill" [style.width.%]="ticket.progress_percent" [style.background]="ticket.status_color"></div>
+              </div>
+              <span class="progress-text">{{ ticket.progress_percent }}%</span>
+            </div>
+          </div>
+
+          <div class="ticket-meta">
+            @if (ticket.intake_at) {
+              <div class="meta-item">
+                <span class="meta-label">Ingreso</span>
+                <span>{{ ticket.intake_at | date:'dd/MM/yyyy' }}</span>
+              </div>
+            }
+            @if (ticket.cost_estimate) {
+              <div class="meta-item">
+                <span class="meta-label">Presupuesto</span>
+                <span class="cost">${{ ticket.cost_estimate | number:'1.0-0' }}</span>
+              </div>
+            }
+          </div>
+
+          @if (ticket.needs_approval) {
+            <div class="approval-banner">
+              Requiere tu aprobación
+            </div>
+          }
+
+          @if (ticket.status_code === 'READY') {
+            <div class="ready-banner">
+              ¡Tu equipo está listo para recoger!
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
+</div>

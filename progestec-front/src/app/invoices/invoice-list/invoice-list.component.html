@@ -1,0 +1,104 @@
+<app-authenticated-layout>
+  <section class="invoices-wrapper">
+    <div class="invoices-body">
+      <header class="page-header">
+        <div class="header-left">
+          <a class="link-back" routerLink="/finanzas">← Volver al dashboard financiero</a>
+          <p class="eyebrow">Finanzas</p>
+          <h1 class="page-title">Facturación</h1>
+          <p class="subtitle">Consulta y gestiona las facturas emitidas.</p>
+        </div>
+      </header>
+
+      <form class="card filters-card" (ngSubmit)="loadInvoices()">
+        <div class="filters-row">
+          <div class="filter-group">
+            <label>Estado</label>
+            <select [(ngModel)]="filters.status" name="status">
+              <option value="">Todos</option>
+              <option value="PENDING">Pendiente</option>
+              <option value="PAID">Pagada</option>
+              <option value="CANCELLED">Cancelada</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label>Cliente (ID)</label>
+            <input type="text" name="client" [(ngModel)]="filters.client" placeholder="ID del cliente" />
+          </div>
+          <div class="filter-group">
+            <label>Fecha desde</label>
+            <input type="date" name="from_date" [(ngModel)]="filters.from_date" />
+          </div>
+          <div class="filter-group">
+            <label>Fecha hasta</label>
+            <input type="date" name="to_date" [(ngModel)]="filters.to_date" />
+          </div>
+          <div class="filter-group checkbox-group">
+            <label>
+              <input type="checkbox" [(ngModel)]="filters.with_debt" name="with_debt" />
+              <span>Solo con saldo pendiente</span>
+            </label>
+          </div>
+          <div class="filter-actions">
+            <button type="submit" class="btn btn-dark" [disabled]="loading">Filtrar</button>
+            <button type="button" class="btn btn-light" (click)="clearFilters()">Limpiar</button>
+          </div>
+        </div>
+      </form>
+
+      <div class="card table-card">
+        <div class="table-responsive" *ngIf="!loading && !error">
+          <table class="invoices-table">
+            <thead>
+              <tr>
+                <th>Número</th>
+                <th>Ticket</th>
+                <th>Cliente</th>
+                <th>Fecha</th>
+                <th>Total</th>
+                <th>Pagado</th>
+                <th>Saldo</th>
+                <th>Estado</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let invoice of invoices">
+                <td class="fw-semibold">#{{ invoice.invoice_number }}</td>
+                <td>{{ invoice.ticket_tracking_code || ('Ticket #' + invoice.ticket_id) }}</td>
+                <td>{{ invoice.client_name || ('Cliente #' + invoice.client_id) }}</td>
+                <td>{{ invoice.issue_date | date: 'dd/MM/yyyy' }}</td>
+                <td>${{ invoice.total | number: '1.2-2' }}</td>
+                <td>${{ invoice.total_paid | number: '1.2-2' }}</td>
+                <td>${{ invoice.outstanding_amount | number: '1.2-2' }}</td>
+                <td>
+                  <span class="status-chip" [ngClass]="getStatusBadgeClass(invoice.status)">
+                    {{ invoice.status | titlecase }}
+                  </span>
+                </td>
+                <td class="text-end">
+                  <a [routerLink]="['/facturacion', invoice.id]" class="link-action">Ver detalle</a>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div *ngIf="!loading && !error && !invoices.length" class="empty-state">
+          <p>No hay facturas que coincidan con los filtros.</p>
+        </div>
+
+        <div *ngIf="error" class="feedback-error">
+          {{ error }}
+        </div>
+
+        <div *ngIf="loading" class="loading-overlay">
+          <div class="loading-inner">
+            <div class="spinner-border" role="status"></div>
+            <p>Cargando facturas...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</app-authenticated-layout>

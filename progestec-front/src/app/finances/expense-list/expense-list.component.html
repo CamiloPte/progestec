@@ -1,0 +1,223 @@
+<app-authenticated-layout>
+  <div class="expense-list-page">
+    <!-- Header -->
+    <div class="page-header">
+      <div class="header-content">
+        <a routerLink="/finanzas" class="back-link">← Dashboard Financiero</a>
+        <h1>Gestión de Gastos</h1>
+        <p class="subtitle">Registro y control de gastos operativos</p>
+      </div>
+      <div class="header-actions">
+        <button class="btn btn-primary" (click)="openExpenseModal()">
+          + Nuevo Gasto
+        </button>
+      </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="filters-card">
+      <div class="filters-row">
+        <div class="filter-group">
+          <label>Categoría</label>
+          <select [(ngModel)]="filters.category_id">
+            <option value="">Todas</option>
+            @for (cat of categories; track cat.id) {
+              <option [value]="cat.id">{{ cat.name }}</option>
+            }
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>Método de Pago</label>
+          <select [(ngModel)]="filters.payment_method">
+            <option value="">Todos</option>
+            <option value="CASH">Efectivo</option>
+            <option value="CARD">Tarjeta</option>
+            <option value="TRANSFER">Transferencia</option>
+            <option value="OTHER">Otro</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>Desde</label>
+          <input type="date" [(ngModel)]="filters.from_date" />
+        </div>
+        <div class="filter-group">
+          <label>Hasta</label>
+          <input type="date" [(ngModel)]="filters.to_date" />
+        </div>
+        <div class="filter-actions">
+          <button class="btn btn-secondary" (click)="applyFilters()">Filtrar</button>
+          <button class="btn btn-ghost" (click)="clearFilters()">Limpiar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Resumen -->
+    <div class="summary-bar">
+      <div class="summary-item">
+        <span class="label">Total de registros</span>
+        <span class="value">{{ expenses.length }}</span>
+      </div>
+      <div class="summary-item">
+        <span class="label">Monto total</span>
+        <span class="value expense">${{ getTotalExpenses() | number: '1.2-2' }}</span>
+      </div>
+    </div>
+
+    <!-- Loading / Error -->
+    @if (loading) {
+      <div class="loading-state">
+        <div class="spinner"></div>
+        <p>Cargando gastos...</p>
+      </div>
+    } @else if (error) {
+      <div class="error-state">
+        <p>{{ error }}</p>
+        <button class="btn btn-secondary" (click)="loadExpenses()">Reintentar</button>
+      </div>
+    } @else if (expenses.length === 0) {
+      <div class="empty-state">
+        <div class="empty-icon">📊</div>
+        <h3>No hay gastos registrados</h3>
+        <p>Comienza registrando tu primer gasto operativo</p>
+        <button class="btn btn-primary" (click)="openExpenseModal()">Registrar gasto</button>
+      </div>
+    } @else {
+      <!-- Tabla de gastos -->
+      <div class="table-card">
+        <table>
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Categoría</th>
+              <th>Descripción</th>
+              <th>Proveedor</th>
+              <th>Método</th>
+              <th>Referencia</th>
+              <th class="text-right">Monto</th>
+              <th class="text-center">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (expense of expenses; track expense.id) {
+              <tr>
+                <td>{{ expense.expense_date | date: 'dd/MM/yyyy' }}</td>
+                <td>
+                  <span class="category-chip">{{ expense.category_name }}</span>
+                </td>
+                <td>
+                  <div class="description-cell">
+                    {{ expense.description }}
+                    @if (expense.part_name) {
+                      <span class="part-tag">📦 {{ expense.part_name }} (x{{ expense.quantity }})</span>
+                    }
+                  </div>
+                </td>
+                <td>{{ expense.supplier_name || '-' }}</td>
+                <td>{{ getPaymentMethodLabel(expense.payment_method) }}</td>
+                <td>{{ expense.reference || '-' }}</td>
+                <td class="text-right amount">${{ expense.amount | number: '1.2-2' }}</td>
+                <td class="text-center">
+                  <button class="action-btn delete" (click)="deleteExpense(expense)" title="Eliminar">
+                    🗑️
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+
+    <!-- Modal Nuevo Gasto -->
+    @if (expenseModal) {
+      <div class="modal-overlay" (click)="closeExpenseModal()">
+        <div class="modal-card" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h2>Registrar Gasto</h2>
+            <button class="close-btn" (click)="closeExpenseModal()">×</button>
+          </div>
+          <div class="modal-body">
+            @if (expenseError) {
+              <div class="error-message">{{ expenseError }}</div>
+            }
+
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Categoría *</label>
+                <select [(ngModel)]="expenseForm.category_id">
+                  @for (cat of categories; track cat.id) {
+                    <option [value]="cat.id">{{ cat.name }}</option>
+                  }
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label>Monto *</label>
+                <input type="number" [(ngModel)]="expenseForm.amount" min="0" step="0.01" />
+              </div>
+
+              <div class="form-group full">
+                <label>Descripción *</label>
+                <input type="text" [(ngModel)]="expenseForm.description" placeholder="Ej: Compra de pantallas iPhone" />
+              </div>
+
+              <div class="form-group">
+                <label>Método de Pago</label>
+                <select [(ngModel)]="expenseForm.payment_method">
+                  <option value="CASH">Efectivo</option>
+                  <option value="CARD">Tarjeta</option>
+                  <option value="TRANSFER">Transferencia</option>
+                  <option value="OTHER">Otro</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label>Fecha</label>
+                <input type="date" [(ngModel)]="expenseForm.expense_date" />
+              </div>
+
+              <div class="form-group">
+                <label>Referencia / Factura</label>
+                <input type="text" [(ngModel)]="expenseForm.reference" placeholder="# Factura proveedor" />
+              </div>
+
+              <div class="form-group">
+                <label>Proveedor</label>
+                <input type="text" [(ngModel)]="expenseForm.supplier_name" placeholder="Nombre del proveedor" />
+              </div>
+
+              <!-- Sección para compra de inventario -->
+              <div class="form-group full inventory-section">
+                <label class="section-label">¿Es compra de inventario?</label>
+                <div class="inventory-row">
+                  <select [(ngModel)]="expenseForm.part_id">
+                    <option [value]="undefined">No aplica</option>
+                    @for (part of parts; track part.id) {
+                      <option [value]="part.id">{{ part.name }} (Stock: {{ part.stock_current }})</option>
+                    }
+                  </select>
+                  @if (expenseForm.part_id) {
+                    <input type="number" [(ngModel)]="expenseForm.quantity" min="1" placeholder="Cantidad" />
+                  }
+                </div>
+              </div>
+
+              <div class="form-group full">
+                <label>Notas</label>
+                <textarea [(ngModel)]="expenseForm.notes" rows="2" placeholder="Notas adicionales..."></textarea>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" (click)="closeExpenseModal()" [disabled]="submittingExpense">
+              Cancelar
+            </button>
+            <button class="btn btn-primary" (click)="submitExpense()" [disabled]="submittingExpense">
+              {{ submittingExpense ? 'Guardando...' : 'Registrar Gasto' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+</app-authenticated-layout>

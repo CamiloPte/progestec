@@ -1,0 +1,129 @@
+<div class="login-page container-fluid min-vh-100 d-flex flex-column">
+  <!-- Contenido principal -->
+  <div class="row flex-grow-1 align-items-center justify-content-center">
+    <!-- Columna izquierda: hero (solo desktop) -->
+    <div class="col-lg-6 d-none d-lg-flex align-items-center justify-content-center">
+      <div class="login-hero">
+        <h1 class="login-hero-logo mb-3">ProGesTec</h1>
+        <p class="login-hero-title mb-2">
+          Gestiona tu servicio técnico de forma inteligente.
+        </p>
+        <p class="login-hero-subtitle mb-4">
+          Centraliza tickets, equipos y clientes en un solo panel pensado para
+          talleres de reparación de dispositivos móviles y portátiles.
+        </p>
+
+        <ul class="login-hero-list">
+          <li>Registra ingresos y salidas de equipos con historial completo.</li>
+          <li>Asigna y controla el trabajo de técnicos por rol.</li>
+          <li>Consulta rápidamente el estado de cada ticket y su diagnóstico.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Columna derecha: card de login -->
+    <div
+      class="col-lg-4 col-md-8 col-12 d-flex align-items-center justify-content-center"
+    >
+      <div class="login-card shadow-sm">
+        <div class="text-center mb-4">
+          <h1 class="login-title">ProGesTec</h1>
+          <h2 class="login-subtitle">Bienvenido de vuelta</h2>
+        </div>
+
+        <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+          <!-- Email -->
+          <div class="mb-3">
+            <label for="email" class="form-label">Correo electrónico</label>
+            <input
+              id="email"
+              type="email"
+              class="form-control login-input"
+              placeholder="nombre@empresa.com"
+              formControlName="email"
+              [ngClass]="{
+                'is-invalid': hasError('email', 'required') || hasError('email', 'email')
+              }"
+            />
+            <div class="invalid-feedback" *ngIf="hasError('email', 'required')">
+              El email es obligatorio.
+            </div>
+            <div class="invalid-feedback" *ngIf="hasError('email', 'email')">
+              Ingresa un email válido.
+            </div>
+          </div>
+
+          <!-- Password -->
+          <div class="mb-3">
+            <label for="password" class="form-label">Contraseña</label>
+            <div class="input-group">
+              <input
+                id="password"
+                [type]="hidePassword ? 'password' : 'text'"
+                class="form-control login-input"
+                placeholder="Introduce tu contraseña"
+                formControlName="password"
+                [ngClass]="{ 'is-invalid': hasError('password', 'required') }"
+              />
+              <button
+                type="button"
+                class="btn btn-outline-secondary login-toggle-btn"
+                (click)="togglePassword()"
+              >
+                {{ hidePassword ? 'Ver' : 'Ocultar' }}
+              </button>
+              <div class="invalid-feedback d-block" *ngIf="hasError('password', 'required')">
+                La contraseña es obligatoria.
+              </div>
+            </div>
+          </div>
+
+          <!-- Error global -->
+          <div class="alert alert-danger py-2" *ngIf="errorMessage">
+            {{ errorMessage }}
+          </div>
+
+          <!-- Botón -->
+          <button
+            type="submit"
+            class="btn btn-primary w-100 login-btn"
+            [disabled]="loading || form.invalid"
+          >
+            <span *ngIf="!loading">Iniciar Sesión</span>
+            <span *ngIf="loading">Iniciando…</span>
+          </button>
+
+          <!-- Link recuperar -->
+          <div class="text-center mt-3">
+            <a href="#" class="login-forgot-link">¿Olvidaste tu contraseña?</a>
+          </div>
+        </form>
+
+        <!-- Footer pequeño dentro de la card -->
+        <div class="text-center mt-4 small text-muted">
+          Acceso para personal del taller. El portal de clientes está habilitado.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer global -->
+  <footer class="login-footer py-3 mt-auto">
+    <div
+      class="container d-flex flex-column flex-md-row justify-content-between align-items-center gap-1"
+    >
+      <span>© {{ currentYear }} ProGesTec</span>
+      <span class="text-muted">Gestión de servicio técnico · Fase 1</span>
+    </div>
+  </footer>
+
+  <!-- Overlay de carga (modal) -->
+  <div class="login-loading-backdrop" *ngIf="loading">
+    <div class="login-loading-card">
+      <div class="spinner-border mb-3" role="status">
+        <span class="visually-hidden">Cargando...</span>
+      </div>
+      <p class="mb-0">Iniciando sesión…</p>
+    </div>
+  </div>
+</div>

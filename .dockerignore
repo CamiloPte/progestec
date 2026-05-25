@@ -1,0 +1,30 @@
+# Carpetas de dependencias de otros lenguajes
+#node_modules/
+#vendor/
+
+# Archivos y carpetas de Python
+__pycache__/
+*.pyc
+.mypy_cache/
+
+# Archivos de configuración local
+.env
+*.local
+
+# Directorios de build, logs o temporales
+frontend/
+templates/
+venv/
+test/
+
+# Ignorar el Dockerfile y Compose (no son necesarios dentro del contenedor)
+Dockerfile
+docker-compose.yml
+estructura.txt
+guiaCamilo.txt
+README.md
+
+
+# Re-incluir un archivo específico si lo necesitas
+#!logs/keep.log
+

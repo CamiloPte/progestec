@@ -1,0 +1,148 @@
+<app-authenticated-layout>
+  <section class="dashboard-content">
+    <header class="page-header">
+      <div class="header-info">
+        <p class="eyebrow">📊 Resumen general de tickets</p>
+        <h1 class="page-title">
+          Bienvenido de nuevo,
+          <span class="highlight">{{ (user$ | async)?.full_name || (user$ | async)?.email }}</span>
+        </h1>
+      </div>
+      <button class="btn-create" (click)="onCreateTicket()" *ngIf="canCreateTicket">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+        Nuevo ticket
+      </button>
+    </header>
+
+    <div *ngIf="summaryError && !summaryLoading" class="page-alert">
+      ⚠️ {{ summaryError }}
+    </div>
+
+    <div class="dashboard-body" *ngIf="summary && !summaryLoading">
+      <div class="kpi-grid">
+        <article class="kpi-card">
+          <p class="kpi-label">Total Tickets</p>
+          <p class="kpi-value">{{ summary.total_tickets }}</p>
+        </article>
+        <article class="kpi-card">
+          <p class="kpi-label">Tickets abiertos</p>
+          <p class="kpi-value accent-green">{{ summary.open_tickets }}</p>
+        </article>
+        <article class="kpi-card">
+          <p class="kpi-label">En progreso</p>
+          <p class="kpi-value accent-blue">{{ summary.in_progress_tickets }}</p>
+        </article>
+        <article class="kpi-card">
+          <p class="kpi-label">Tickets cerrados</p>
+          <p class="kpi-value accent-gray">{{ summary.closed_tickets }}</p>
+        </article>
+      </div>
+
+      <div class="status-row-grid">
+        <article class="card-panel">
+          <div class="panel-header">
+            <h2>Tickets por estado</h2>
+          </div>
+          <div *ngIf="summary.by_status?.length; else noStatusData">
+            <div class="status-row" *ngFor="let s of summary.by_status">
+              <div class="status-name">{{ s.status_name || s.status_code }}</div>
+              <div class="status-bar">
+                <div
+                  class="status-fill"
+                  [ngClass]="getStatusProgressClass(s)"
+                  [style.width.%]="getStatusProgress(s)"
+                ></div>
+              </div>
+              <div class="status-count">{{ s.count }}</div>
+            </div>
+          </div>
+          <ng-template #noStatusData>
+            <p class="text-muted mb-0">
+              Aún no hay datos suficientes para mostrar los estados.
+            </p>
+          </ng-template>
+        </article>
+
+        <article class="card-panel muted-card">
+          <p class="placeholder-title">📈 Próximamente</p>
+          <p class="placeholder-text">
+            Acá podrás agregar reportes o widgets adicionales más adelante.
+          </p>
+        </article>
+      </div>
+
+      <article class="card-panel recent-card">
+        <div class="panel-header">
+          <h2>Tickets recientes</h2>
+        </div>
+        <div class="recent-table">
+          <table class="table align-middle mb-0">
+            <thead>
+              <tr>
+                <th>CÓDIGO</th>
+                <th>DISPOSITIVO</th>
+                <th>ESTADO</th>
+                <th>ASIGNADO A</th>
+                <th>CREADO</th>
+                <th class="text-end"></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let t of summary.recent_tickets">
+                <td data-label="Código" class="fw-semibold text-nowrap">
+                  #{{ t.tracking_code }}
+                </td>
+                <td data-label="Dispositivo">
+                  {{ t.device_label || ('Dispositivo #' + t.device_id) }}
+                </td>
+                <td data-label="Estado">
+                  <span
+                    class="badge rounded-pill"
+                    [ngClass]="getStatusBadgeClass(t)"
+                  >
+                    {{ t.status_name || t.status_code || 'Sin estado' }}
+                  </span>
+                </td>
+                <td data-label="Asignado">{{ t.assignee_name || 'Sin asignar' }}</td>
+                <td data-label="Creado" class="text-nowrap">
+                  {{ t.created_at | date : 'dd MMM yyyy, HH:mm' }}
+                </td>
+                <td class="text-end">
+                  <button
+                    type="button"
+                    class="btn btn-link btn-sm"
+                    (click)="onViewTicket(t)"
+                  >
+                    Ver detalle →
+                  </button>
+                </td>
+              </tr>
+              <tr *ngIf="!summary.recent_tickets.length">
+                <td colspan="6" class="text-center text-muted py-4">
+                  No hay tickets recientes para mostrar.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </article>
+    </div>
+
+    <div
+      class="empty-state"
+      *ngIf="!summary && !summaryLoading && !summaryError"
+    >
+      <p>No se encontró información para mostrar el panel.</p>
+    </div>
+
+    <div class="loading-overlay" *ngIf="summaryLoading">
+      <div class="loading-inner">
+        <div class="spinner-border" role="status"></div>
+        <p>Cargando resumen de tickets...</p>
+      </div>
+    </div>
+  </section>
+</app-authenticated-layout>

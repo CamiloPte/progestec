@@ -1,0 +1,300 @@
+<!-- src/app/client-portal/client-dashboard/client-dashboard.component.html -->
+<div class="client-portal">
+  <!-- Header -->
+  <header class="portal-header">
+    <div class="header-content">
+      <div class="logo-section">
+        <div class="logo">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+          </svg>
+        </div>
+        <div class="brand">
+          <h1>ProGesTec</h1>
+          <span class="tagline">Portal del Cliente</span>
+        </div>
+      </div>
+      <div class="user-section">
+        @if (summary) {
+          <span class="user-greeting">{{ summary.client_name }}</span>
+        }
+        <button class="btn-logout" (click)="logout()">
+          Cerrar sesión
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="portal-main">
+    @if (loading) {
+      <div class="loading-container">
+        <app-loading-spinner 
+          type="helix" 
+          color="primary" 
+          message="Cargando tu información...">
+        </app-loading-spinner>
+      </div>
+    } @else if (error) {
+      <div class="error-container">
+        <span class="error-icon">⚠️</span>
+        <p>{{ error }}</p>
+        <button class="btn-primary" (click)="loadDashboard()">Reintentar</button>
+      </div>
+    } @else if (summary) {
+      <!-- Bienvenida -->
+      <section class="welcome-section">
+        <h2>Bienvenido, {{ summary.client_name }}</h2>
+        <p>Aquí puedes ver el estado de tus equipos y servicios.</p>
+      </section>
+
+      <!-- Notificaciones Importantes -->
+      @if (summary.notifications.length > 0) {
+        <section class="notifications-section">
+          <div class="notifications-list">
+            @for (notif of summary.notifications; track notif.created_at) {
+              <div class="notification-card" [class]="'notif-' + notif.type" (click)="handleNotificationClick(notif)">
+                <span class="notif-icon">{{ notif.icon }}</span>
+                <div class="notif-content">
+                  <strong>{{ notif.title }}</strong>
+                  <p>{{ notif.message }}</p>
+                </div>
+                @if (notif.action_url) {
+                  <span class="notif-arrow">→</span>
+                }
+              </div>
+            }
+          </div>
+        </section>
+      }
+
+      <!-- Resumen en tarjetas -->
+      <section class="stats-section">
+        <div class="stat-card stat-tickets">
+          <div class="stat-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 0 0-2 2v3a2 2 0 1 1 0 4v3a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-3a2 2 0 1 1 0-4V7a2 2 0 0 0-2-2H5z"/>
+            </svg>
+          </div>
+          <div class="stat-content">
+            <span class="stat-value">{{ summary.active_tickets }}</span>
+            <span class="stat-label">Servicios activos</span>
+          </div>
+        </div>
+        <div class="stat-card stat-devices">
+          <div class="stat-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
+              <line x1="12" y1="18" x2="12.01" y2="18"/>
+            </svg>
+          </div>
+          <div class="stat-content">
+            <span class="stat-value">{{ summary.devices_count }}</span>
+            <span class="stat-label">Mis dispositivos</span>
+          </div>
+        </div>
+        <div class="stat-card stat-invoices">
+          <div class="stat-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/>
+              <line x1="16" y1="17" x2="8" y2="17"/>
+            </svg>
+          </div>
+          <div class="stat-content">
+            <span class="stat-value">{{ summary.pending_invoices }}</span>
+            <span class="stat-label">Facturas pendientes</span>
+          </div>
+        </div>
+        @if (summary.pending_approvals > 0) {
+          <div class="stat-card stat-approvals">
+            <div class="stat-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                <line x1="12" y1="9" x2="12" y2="13"/>
+                <line x1="12" y1="17" x2="12.01" y2="17"/>
+              </svg>
+            </div>
+            <div class="stat-content">
+              <span class="stat-value">{{ summary.pending_approvals }}</span>
+              <span class="stat-label">Por aprobar</span>
+            </div>
+          </div>
+        }
+      </section>
+
+      <!-- Tickets Activos -->
+      <section class="tickets-section">
+        <div class="section-header">
+          <h3>Mis Servicios</h3>
+          <a routerLink="/client/tickets" class="view-all">Ver todos →</a>
+        </div>
+        
+        @if (summary.tickets.length === 0) {
+          <div class="empty-state">
+            <span class="empty-icon">✨</span>
+            <p>No tienes servicios en este momento.</p>
+          </div>
+        } @else {
+          <div class="tickets-grid">
+            @for (ticket of summary.tickets.slice(0, 6); track ticket.id) {
+              <div class="ticket-card" (click)="navigateToTicket(ticket.id)">
+                <div class="ticket-header">
+                  <span class="ticket-code">{{ ticket.tracking_code }}</span>
+                  <span class="badge" [class]="getStatusBadgeClass(ticket.status_code)">
+                    {{ ticket.status_name }}
+                  </span>
+                </div>
+                <div class="ticket-device">{{ ticket.device_label }}</div>
+                <div class="ticket-problem">{{ ticket.failure_desc }}</div>
+                
+                <!-- Barra de progreso -->
+                <div class="progress-container">
+                  <div class="progress-bar">
+                    <div class="progress-fill" [style.width.%]="ticket.progress_percent" [style.background]="ticket.status_color"></div>
+                  </div>
+                  <span class="progress-text">{{ ticket.progress_percent }}%</span>
+                </div>
+
+                @if (ticket.needs_approval) {
+                  <div class="approval-notice">
+                    <span>Presupuesto: ${{ ticket.cost_estimate | number:'1.0-0' }}</span>
+                    <button class="btn-approve">Aprobar</button>
+                  </div>
+                }
+
+                @if (ticket.status_code === 'READY') {
+                  <div class="ready-notice">
+                    <span>¡Tu equipo está listo para recoger!</span>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        }
+      </section>
+
+      <!-- Mis Dispositivos -->
+      <section class="devices-section">
+        <div class="section-header">
+          <h3>Mis Dispositivos</h3>
+          <a routerLink="/client/devices" class="view-all">Ver todos →</a>
+        </div>
+        
+        @if (summary.devices.length === 0) {
+          <div class="empty-state">
+            <span class="empty-icon">📦</span>
+            <p>No tienes dispositivos registrados aún.</p>
+          </div>
+        } @else {
+          <div class="devices-grid">
+            @for (device of summary.devices; track device.id) {
+              <div class="device-card" (click)="navigateToDevice(device.id)">
+                <span class="device-icon">{{ getDeviceIcon(device.type) }}</span>
+                <div class="device-info">
+                  <strong>{{ device.brand }} {{ device.model }}</strong>
+                  <span class="device-serial">{{ device.serial || 'Sin serial' }}</span>
+                </div>
+                <div class="device-stats">
+                  <span class="services-count">{{ device.tickets_count }} servicios</span>
+                  @if (device.last_service_status) {
+                    <span class="last-service">Último: {{ device.last_service_status }}</span>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </section>
+
+      <!-- Facturas Pendientes -->
+      @if (summary.invoices.length > 0) {
+        <section class="invoices-section">
+          <div class="section-header">
+            <h3>Facturas Pendientes</h3>
+            <a routerLink="/client/invoices" class="view-all">Ver todas →</a>
+          </div>
+          
+          <div class="invoices-list">
+            @for (invoice of summary.invoices; track invoice.id) {
+              <div class="invoice-card" [class]="getInvoiceStatusClass(invoice.status)" (click)="navigateToInvoice(invoice.id)">
+                <div class="invoice-header">
+                  <span class="invoice-number">{{ invoice.invoice_number }}</span>
+                  <span class="invoice-status">{{ getInvoiceStatusLabel(invoice.status) }}</span>
+                </div>
+                <div class="invoice-details">
+                  @if (invoice.ticket_tracking_code) {
+                    <span class="invoice-ticket">Ticket: {{ invoice.ticket_tracking_code }}</span>
+                  }
+                  <span class="invoice-date">{{ invoice.issue_date | date:'dd/MM/yyyy' }}</span>
+                </div>
+                <div class="invoice-amounts">
+                  <div class="amount-row">
+                    <span>Total:</span>
+                    <strong>${{ invoice.total | number:'1.0-0' }}</strong>
+                  </div>
+                  @if (invoice.pending_amount > 0) {
+                    <div class="amount-row pending">
+                      <span>Pendiente:</span>
+                      <strong class="pending-amount">${{ invoice.pending_amount | number:'1.0-0' }}</strong>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        </section>
+      }
+
+      <!-- Acciones rápidas -->
+      <section class="quick-actions">
+        <h3>Acciones rápidas</h3>
+        <div class="actions-grid">
+          <a routerLink="/client/tickets" class="action-btn">
+            <div class="action-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 0 0-2 2v3a2 2 0 1 1 0 4v3a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-3a2 2 0 1 1 0-4V7a2 2 0 0 0-2-2H5z"/>
+              </svg>
+            </div>
+            <span>Ver mis tickets</span>
+          </a>
+          <a routerLink="/client/devices" class="action-btn">
+            <div class="action-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
+                <line x1="12" y1="18" x2="12.01" y2="18"/>
+              </svg>
+            </div>
+            <span>Mis dispositivos</span>
+          </a>
+          <a routerLink="/client/invoices" class="action-btn">
+            <div class="action-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+                <line x1="16" y1="13" x2="8" y2="13"/>
+                <line x1="16" y1="17" x2="8" y2="17"/>
+              </svg>
+            </div>
+            <span>Mis facturas</span>
+          </a>
+          <a routerLink="/client/profile" class="action-btn">
+            <div class="action-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
+            </div>
+            <span>Mi perfil</span>
+          </a>
+        </div>
+      </section>
+    }
+  </main>
+
+  <!-- Footer -->
+  <footer class="portal-footer">
+    <p>ProGesTec - Servicio Técnico Profesional</p>
+    <p>+57 301 255-4106 | servicioprogestec&#64;gmail.com</p>
+  </footer>
+</div>

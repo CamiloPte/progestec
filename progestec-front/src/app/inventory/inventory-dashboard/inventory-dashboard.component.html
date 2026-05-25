@@ -1,0 +1,442 @@
+<!-- Vista de dashboard de inventario: listado, KPIs y modales de repuestos/movimientos. -->
+<app-authenticated-layout>
+  <section class="inventory-wrapper">
+    <div class="inventory-body">
+      <header class="inventory-header">
+        <div>
+          <p class="eyebrow">Control de inventario</p>
+          <h1>Inventario de repuestos</h1>
+          <p class="subtitle">
+            Gestiona el stock y los movimientos de repuestos críticos.
+          </p>
+        </div>
+        <div class="header-actions">
+          @if (isAdminOrAdvisor) {
+            <button
+              class="btn btn-secondary"
+              (click)="openPartModal()"
+            >
+              <span class="icon">+</span>
+              Nuevo repuesto
+            </button>
+          }
+          <button
+            class="btn btn-primary"
+            [disabled]="!parts.length"
+            (click)="onCreateMovement()"
+            title="{{ parts.length ? 'Registrar movimiento' : 'Necesitas al menos un repuesto para registrar movimientos' }}"
+          >
+            <span class="icon">+</span>
+            Registrar movimiento
+          </button>
+        </div>
+      </header>
+
+      <!-- KPIs -->
+      @if (summary; as summaryData) {
+        <div class="kpi-grid">
+          <article class="kpi-card">
+            <p class="kpi-label">Stock total</p>
+            <p class="kpi-value">{{ summaryData.total_stock | number }}</p>
+          </article>
+          <article class="kpi-card warning">
+            <p class="kpi-label">Alertas de bajo stock</p>
+            <p class="kpi-value">{{ summaryData.low_stock_alerts }}</p>
+          </article>
+          <article class="kpi-card">
+            <p class="kpi-label">Movimientos hoy</p>
+            <p class="kpi-value">{{ summaryData.movements_today }}</p>
+          </article>
+          <article class="kpi-card danger">
+            <p class="kpi-label">Repuestos críticos</p>
+            <p class="kpi-value">{{ summaryData.critical_parts }}</p>
+          </article>
+        </div>
+      } @else {
+        <div class="card text-muted">
+          @if (summaryError) {
+            {{ summaryError }}
+          } @else {
+            Aún no hay datos de inventario. Registra repuestos para ver el resumen.
+          }
+        </div>
+      }
+
+      <!-- Stock por categoría -->
+      @if (summary; as summaryData) {
+        <article class="card">
+          <div class="panel-header">
+            <h2>Stock por categoría</h2>
+          </div>
+          <div class="category-bars">
+            @for (entry of summaryData.stock_by_category | keyvalue; track entry.key) {
+              <div class="category-row">
+                <span class="category-label">{{ entry.key }}</span>
+                <div class="bar">
+                  <div
+                    class="fill"
+                    [style.width.%]="getCategoryPercentage(entry.key)"
+                  ></div>
+                </div>
+                <span class="category-count">{{ entry.value }}</span>
+              </div>
+            }
+          </div>
+        </article>
+      }
+
+      <!-- Tabla de repuestos -->
+      <article class="card">
+        <div class="filters">
+          <div class="input-icon">
+            <span>🔍</span>
+            <input
+              type="text"
+              placeholder="Buscar por código o repuesto"
+              [(ngModel)]="search"
+              (ngModelChange)="onSearchChange()"
+            />
+          </div>
+          <select [(ngModel)]="categoryFilter" (change)="loadParts()">
+            <option value="ALL">Todas las categorías</option>
+            @if (summary?.stock_by_category) {
+              @for (entry of summary!.stock_by_category | keyvalue; track entry.key) {
+                <option [value]="entry.key">{{ entry.key }}</option>
+              }
+            }
+          </select>
+          <select [(ngModel)]="statusFilter" (change)="loadParts()">
+            <option value="ALL">Todos los estados</option>
+            <option value="in_stock">En stock</option>
+            <option value="low">Bajo stock</option>
+            <option value="critical">Crítico</option>
+          </select>
+        </div>
+
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>Código</th>
+                <th>Repuesto</th>
+                <th>Categoría</th>
+                <th>Compatible con</th>
+                <th class="text-center">Stock</th>
+                <th class="text-center">Mínimo</th>
+                <th>Estado</th>
+                <th>Último movimiento</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (part of parts; track part.id) {
+                <tr>
+                  <td>{{ part.sku || '—' }}</td>
+                  <td>{{ part.name }}</td>
+                  <td>{{ part.category || '—' }}</td>
+                  <td>{{ part.compatible_models || '—' }}</td>
+                  <td class="text-center">{{ part.stock_current }}</td>
+                  <td class="text-center">{{ part.stock_min }}</td>
+                  <td>
+                    <span [ngClass]="getStatusClass(part)">
+                      {{ getStatusLabel(part) }}
+                    </span>
+                  </td>
+                  <td>
+                    {{
+                      part.last_movement_at
+                        ? (part.last_movement_at | date: 'yyyy-MM-dd HH:mm')
+                        : '—'
+                    }}
+                  </td>
+                  <td class="text-end actions-cell">
+                    <button
+                      type="button"
+                      class="link-btn"
+                      (click)="viewDetail(part)"
+                    >
+                      Ver detalle
+                    </button>
+                    <button
+                      type="button"
+                      class="link-btn"
+                      (click)="openMovementModal(part)"
+                    >
+                      Movimiento
+                    </button>
+                    @if (isAdminOrAdvisor) {
+                      <button
+                        type="button"
+                        class="link-btn"
+                        (click)="openPartModal(part)"
+                      >
+                        Editar
+                      </button>
+                      <button
+                        type="button"
+                        class="link-btn danger"
+                        (click)="deletePart(part)"
+                      >
+                        Eliminar
+                      </button>
+                    }
+                  </td>
+                </tr>
+              }
+              @if (!parts.length && !partsLoading) {
+                <tr>
+                  <td colspan="9" class="empty-cell">
+                    No se encontraron repuestos con los filtros aplicados.
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </article>
+    </div>
+
+    <!-- Overlay de carga -->
+    @if (partsLoading || summaryLoading) {
+      <div class="loading-overlay">
+        <div class="loading-card">
+          <div class="spinner-border" role="status"></div>
+          <p>Cargando información de inventario...</p>
+        </div>
+      </div>
+    }
+
+    <!-- Modal Nuevo/Editar Repuesto -->
+    @if (showPartModal) {
+      <div class="modal-backdrop">
+        <div class="modal-card large">
+          <header>
+            <h3>
+              {{
+                partModalMode === 'create' ? 'Nuevo repuesto' : 'Editar repuesto'
+              }}
+            </h3>
+            <button class="close" (click)="closePartModal()">&times;</button>
+          </header>
+        <form (ngSubmit)="submitPartForm()">
+          <div class="form-grid">
+            <label>
+              <span>Nombre</span>
+              <input
+                type="text"
+                name="name"
+                [(ngModel)]="partForm.name"
+                required
+              />
+            </label>
+            <label>
+              <span>SKU</span>
+              <input
+                type="text"
+                name="sku"
+                [(ngModel)]="partForm.sku"
+                [readonly]="true"
+                [placeholder]="
+                  partModalMode === 'create'
+                    ? 'Se generará automáticamente al guardar'
+                    : ''
+                "
+              />
+            </label>
+            <label>
+              <span>Categoría</span>
+              <select
+                name="category"
+                [(ngModel)]="partForm.category"
+              >
+                <option value="">Selecciona una categoría</option>
+                @for (cat of categoryOptions; track cat) {
+                  <option [value]="cat">{{ cat }}</option>
+                }
+              </select>
+            </label>
+            <label>
+              <span>Fabricante</span>
+              <input
+                type="text"
+                name="manufacturer"
+                [(ngModel)]="partForm.manufacturer"
+              />
+            </label>
+            <label>
+              <span>Costo unitario</span>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                name="unit_price"
+                [(ngModel)]="partForm.unit_price"
+                required
+              />
+            </label>
+            <label>
+              <span>Stock actual</span>
+              <input
+                type="number"
+                min="0"
+                name="stock_current"
+                [(ngModel)]="partForm.stock_current"
+              />
+            </label>
+            <label>
+              <span>Stock mínimo</span>
+              <input
+                type="number"
+                min="0"
+                name="stock_min"
+                [(ngModel)]="partForm.stock_min"
+                required
+              />
+            </label>
+            @if (isAdminOrAdvisor) {
+              <label class="checkbox">
+                <input
+                  type="checkbox"
+                  name="requires_approval"
+                  [(ngModel)]="partForm.requires_approval"
+                />
+                <span>Requiere aprobación para su uso</span>
+              </label>
+            }
+            <label class="full">
+              <span>Compatible con</span>
+              <textarea
+                rows="2"
+                name="compatible_models"
+                [(ngModel)]="partForm.compatible_models"
+              ></textarea>
+            </label>
+            <label class="full">
+              <span>Proveedor preferido</span>
+              <input
+                type="text"
+                name="preferred_vendor"
+                [(ngModel)]="partForm.preferred_vendor"
+              />
+            </label>
+            <label class="full">
+              <span>Notas</span>
+              <textarea
+                rows="3"
+                name="notes"
+                [(ngModel)]="partForm.notes"
+              ></textarea>
+            </label>
+          </div>
+          @if (partError) {
+            <div class="form-error">{{ partError }}</div>
+          }
+          <footer>
+            <button
+              type="button"
+              class="btn btn-outline"
+              (click)="closePartModal()"
+            >
+              Cancelar
+            </button>
+            <button type="submit" class="btn btn-primary" [disabled]="partSaving">
+              {{ partSaving ? 'Guardando...' : 'Guardar' }}
+            </button>
+          </footer>
+        </form>
+        </div>
+      </div>
+    }
+
+    <!-- Modal Movimiento -->
+    @if (showMovementModal) {
+      <div class="modal-backdrop">
+        <div class="modal-card">
+          <header>
+            <h3>Registrar movimiento</h3>
+            <button class="close" (click)="closeMovementModal()">&times;</button>
+          </header>
+        <form (ngSubmit)="submitMovementModal()">
+          <div class="form-grid">
+            <label>
+              <span>Repuesto</span>
+              <select
+                name="movement_part"
+                [(ngModel)]="movementForm.part_id"
+                required
+              >
+                <option [ngValue]="null">Selecciona un repuesto</option>
+                @for (part of parts; track part.id) {
+                  <option [ngValue]="part.id">
+                    {{ part.name }} ({{ part.sku || 'sin SKU' }})
+                  </option>
+                }
+              </select>
+            </label>
+            <label>
+              <span>Tipo</span>
+              <select name="movement_type" [(ngModel)]="movementForm.movement_type">
+                <option value="IN">Ingreso</option>
+                <option value="OUT">Egreso</option>
+              </select>
+            </label>
+            <label>
+              <span>Cantidad</span>
+              <input
+                type="number"
+                min="1"
+                name="movement_qty"
+                [(ngModel)]="movementForm.quantity"
+                required
+              />
+            </label>
+            <label>
+              <span>Documento / Factura</span>
+              <input
+                type="text"
+                name="movement_doc"
+                [(ngModel)]="movementForm.document_ref"
+              />
+            </label>
+            <label>
+              <span>Fecha</span>
+              <input
+                type="datetime-local"
+                name="movement_at"
+                [(ngModel)]="movementForm.movement_at"
+              />
+            </label>
+            <label class="full">
+              <span>Notas</span>
+              <textarea
+                rows="3"
+                name="movement_notes"
+                [(ngModel)]="movementForm.notes"
+              ></textarea>
+            </label>
+          </div>
+          @if (movementError) {
+            <div class="form-error">{{ movementError }}</div>
+          }
+          <footer>
+            <button
+              type="button"
+              class="btn btn-outline"
+              (click)="closeMovementModal()"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              class="btn btn-primary"
+              [disabled]="movementSaving"
+            >
+              {{ movementSaving ? 'Guardando...' : 'Guardar' }}
+            </button>
+          </footer>
+        </form>
+        </div>
+      </div>
+    }
+  </section>
+</app-authenticated-layout>

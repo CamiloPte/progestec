@@ -1,0 +1,21 @@
+<nav class="top-nav">
+  <div class="top-nav-left" (click)="goHome()">
+    <span class="top-nav-logo">ProGesTec</span>
+  </div>
+
+  <div class="top-nav-center">
+    <a routerLink="/inicio" routerLinkActive="active-link">Inicio</a>
+    <a routerLink="/tickets" routerLinkActive="active-link">Tickets</a>
+    <!-- aquí luego agregamos más secciones -->
+  </div>
+
+  <div class="top-nav-right" *ngIf="user$ | async as user">
+    <span class="top-nav-user">
+      {{ user.full_name || user.email }}
+      <small *ngIf="user.role_name">({{ user.role_name }})</small>
+    </span>
+    <button type="button" class="top-nav-logout" (click)="logout()">
+      Cerrar sesión
+    </button>
+  </div>
+</nav>

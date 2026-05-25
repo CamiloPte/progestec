@@ -1,0 +1,49 @@
+
+services:
+  app:
+    build:
+      context: .  # Construye desde la raíz del proyecto donde está el Dockerfile
+    container_name: fastapi_app
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app  # Sincroniza código local con el contenedor (útil para desarrollo)
+    environment:
+      DATABASE_URL: ${DB_URL}  # Asegura que coincida con el alias en config.py
+    depends_on:
+      - db
+    restart: always  # Opcional, reinicia si falla
+
+  db:
+    image: mysql:8.0
+    container_name: mysql_db
+    ports:
+      - "3307:3306"  # Usar puerto 3307 externamente para evitar conflicto con MySQL local
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: progestec_db
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    volumes:
+      - db_data:/var/lib/mysql
+    restart: always  # También reinicia si MySQL falla
+
+  catalog_db:
+    image: postgres:16
+    container_name: catalog_postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: catalog
+      POSTGRES_PASSWORD: catalog
+      POSTGRES_DB: catalog_db
+    volumes:
+      - catalog_db_data:/var/lib/postgresql/data
+      - ./backup:/backup  # Carpeta local para importar el backup
+    restart: always
+
+volumes:
+  db_data:
+    driver: local  # Almacena datos de MySQL en un volumen persistente
+  catalog_db_data:
+    driver: local

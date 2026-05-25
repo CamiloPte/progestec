@@ -1,0 +1,185 @@
+<app-authenticated-layout>
+  <section class="tickets-page">
+    <header class="tickets-header">
+      <div class="header-left">
+        <a class="link-back" routerLink="/inicio">← Volver al dashboard</a>
+        <div>
+          <p class="eyebrow">Listado de tickets</p>
+          <h1>Tickets activos</h1>
+        </div>
+      </div>
+      <button
+        *ngIf="canCreateTicket"
+        class="btn-primary"
+        type="button"
+        (click)="onCreateTicket()"
+      >
+        + Nuevo ticket
+      </button>
+    </header>
+
+    <div class="tickets-tabs">
+      <button
+        type="button"
+        class="tab"
+        [class.active]="assignedFilter === 'all'"
+        (click)="assignedFilter = 'all'; onFiltersChanged()"
+      >
+        Todos
+      </button>
+      <button
+        *ngIf="isTechnician"
+        type="button"
+        class="tab"
+        [class.active]="assignedFilter === 'me'"
+        (click)="assignedFilter = 'me'; onFiltersChanged()"
+      >
+        A mí
+      </button>
+      <button
+        type="button"
+        class="tab"
+        [class.active]="assignedFilter === 'unassigned'"
+        (click)="assignedFilter = 'unassigned'; onFiltersChanged()"
+      >
+        Sin asignar
+      </button>
+    </div>
+
+    <div class="tickets-filters">
+      <div class="filter-group">
+        <label>Estado</label>
+        <select [(ngModel)]="statusFilterCode" (change)="onFiltersChanged()">
+          <option *ngFor="let option of statusOptions" [value]="option.code">
+            {{ option.label }}
+          </option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label>Tipo de dispositivo</label>
+        <select [(ngModel)]="deviceTypeFilter" (change)="onFiltersChanged()">
+          <option *ngFor="let option of deviceTypeOptions" [value]="option.code">
+            {{ option.label }}
+          </option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label>Fecha desde</label>
+        <input type="date" [(ngModel)]="fromDate" (change)="onFiltersChanged()" />
+      </div>
+
+      <div class="filter-group">
+        <label>Fecha hasta</label>
+        <input type="date" [(ngModel)]="toDate" (change)="onFiltersChanged()" />
+      </div>
+
+      <div class="filter-search">
+        <label class="d-none">Buscar ticket</label>
+        <input
+          type="text"
+          placeholder="Buscar ticket, dispositivo o estado..."
+          [(ngModel)]="searchText"
+          (ngModelChange)="onFiltersChanged()"
+        />
+      </div>
+
+      <button class="btn-outline" type="button" (click)="clearFilters()">
+        Limpiar filtros
+      </button>
+    </div>
+
+    <div class="table-card">
+      <div *ngIf="!loading && !error">
+        <div *ngIf="tickets.length > 0; else emptyState">
+          <!-- Desktop Table View -->
+          <div class="table-responsive">
+            <table class="tickets-table">
+              <thead>
+                <tr>
+                  <th>Código</th>
+                  <th>Dispositivo</th>
+                  <th>Asignado a</th>
+                  <th>Estado</th>
+                  <th>Creado</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let t of tickets">
+                  <td class="fw-semibold">#{{ t.tracking_code }}</td>
+                  <td>{{ t.device_label || ('Dispositivo #' + t.device_id) }}</td>
+                  <td>{{ t.assignee_name || 'Sin asignar' }}</td>
+                  <td>
+                    <span class="status-pill" [ngClass]="getStatusPillClass(t)">
+                      {{ t.status_name || t.status_code || '—' }}
+                    </span>
+                  </td>
+                  <td>{{ t.created_at | date: 'yyyy-MM-dd HH:mm' }}</td>
+                  <td class="text-end">
+                    <button class="link-action" type="button" (click)="goToDetail(t.id)">
+                      Ver detalle
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Mobile Cards View -->
+          <div class="tickets-cards-mobile">
+            <article class="ticket-card-mobile" *ngFor="let t of tickets">
+              <div class="ticket-card-header">
+                <span class="ticket-code">#{{ t.tracking_code }}</span>
+                <span class="status-pill" [ngClass]="getStatusPillClass(t)">
+                  {{ t.status_name || t.status_code || '—' }}
+                </span>
+              </div>
+              <div class="ticket-card-body">
+                <div class="ticket-info-row">
+                  <span class="ticket-info-label">Dispositivo</span>
+                  <span class="ticket-info-value">{{ t.device_label || ('Dispositivo #' + t.device_id) }}</span>
+                </div>
+                <div class="ticket-info-row">
+                  <span class="ticket-info-label">Asignado a</span>
+                  <span class="ticket-info-value">{{ t.assignee_name || 'Sin asignar' }}</span>
+                </div>
+                <div class="ticket-info-row">
+                  <span class="ticket-info-label">Creado</span>
+                  <span class="ticket-info-value">{{ t.created_at | date: 'dd/MM/yyyy HH:mm' }}</span>
+                </div>
+              </div>
+              <div class="ticket-card-footer">
+                <button class="link-action" type="button" (click)="goToDetail(t.id)">
+                  Ver detalle
+                </button>
+              </div>
+            </article>
+          </div>
+        </div>
+      </div>
+
+      <ng-template #emptyState>
+        <div class="empty-state">
+          <p>No hay tickets con los filtros actuales.</p>
+        </div>
+      </ng-template>
+
+      <div *ngIf="error" class="tickets-feedback tickets-feedback--error">
+        {{ error }}
+      </div>
+
+      <div class="table-footer">
+        Mostrando {{ tickets.length }} registros
+      </div>
+    </div>
+
+    <div class="loading-overlay" *ngIf="loading">
+      <div class="loading-inner">
+        <div class="spinner-border" role="status"></div>
+        <p>Cargando tickets...</p>
+      </div>
+    </div>
+  </section>
+</app-authenticated-layout>

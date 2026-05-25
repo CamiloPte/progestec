@@ -1,0 +1,33 @@
+# Normalización de saltos de línea
+# Git decide automáticamente texto vs binario, y normaliza a LF en el repo.
+* text=auto eol=lf
+
+# Scripts Windows mantienen CRLF (los .bat fallan con LF)
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+
+# Shell scripts mantienen LF aunque se editen en Windows
+*.sh text eol=lf
+
+# Binarios explícitos (no normalizar)
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.zip binary
+*.tar.gz binary
+*.dump binary
+*.backup binary
+*.sqlite binary
+*.db binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary
+
+# Archivos de lock: dejar que git los trate como texto pero sin diff ruidoso
+package-lock.json -diff
+yarn.lock -diff

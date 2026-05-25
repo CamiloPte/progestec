@@ -1,0 +1,681 @@
+/* src/app/client-portal/client-ticket-detail/client-ticket-detail.component.css */
+
+/* ======================================
+   Modern Minimalist Design - Ticket Detail
+   ====================================== */
+
+:host {
+  --primary: #1a5c3a;
+  --primary-light: #2d8659;
+  --primary-subtle: #e8f5ec;
+  --accent: #c9a227;
+  
+  --gray-50: #fafafa;
+  --gray-100: #f5f5f5;
+  --gray-200: #e5e5e5;
+  --gray-300: #d4d4d4;
+  --gray-400: #a3a3a3;
+  --gray-500: #737373;
+  --gray-600: #525252;
+  --gray-700: #404040;
+  --gray-800: #262626;
+  --gray-900: #171717;
+  
+  --amber: #f59e0b;
+  --amber-light: #fef3c7;
+  --emerald: #10b981;
+  --emerald-light: #d1fae5;
+  --rose: #f43f5e;
+  --rose-light: #fee2e2;
+  
+  --radius: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  
+  --shadow-sm: 0 2px 4px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.06);
+  --shadow: 0 4px 6px -1px rgba(0,0,0,0.06), 0 2px 4px -1px rgba(0,0,0,0.04);
+  --shadow-md: 0 8px 16px -4px rgba(0,0,0,0.08), 0 4px 6px -2px rgba(0,0,0,0.04);
+  
+  --transition-fast: 0.15s ease;
+  --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.client-page {
+  min-height: 100vh;
+  background: var(--gray-50);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  color: var(--gray-800);
+  letter-spacing: -0.01em;
+}
+
+/* ======================================
+   Page Header
+   ====================================== */
+.page-header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 24px 32px;
+  background: white;
+  border-bottom: 1px solid var(--gray-200);
+  max-width: 100%;
+}
+
+.btn-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: 1px solid var(--gray-300);
+  padding: 10px 16px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--gray-700);
+  transition: var(--transition-fast);
+}
+
+.btn-back:hover {
+  background: var(--gray-100);
+  border-color: var(--gray-400);
+}
+
+.page-header h1 {
+  margin: 0;
+  color: var(--gray-900);
+  font-size: 1.375rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+/* ======================================
+   Content Container
+   ====================================== */
+.content-wrapper {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 32px;
+}
+
+/* ======================================
+   Loading & Error States
+   ====================================== */
+.loading-container, .error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 40px;
+  text-align: center;
+  background: white;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--gray-200);
+  max-width: 500px;
+  margin: 32px auto;
+}
+
+.spinner {
+  width: 44px;
+  height: 44px;
+  border: 3px solid var(--gray-200);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-bottom: 16px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loading-container p {
+  color: var(--gray-500);
+  font-size: 0.9375rem;
+  margin: 0;
+}
+
+.error-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.7;
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 600;
+  transition: var(--transition);
+  margin-top: 8px;
+}
+
+.btn-primary:hover {
+  background: var(--primary-light);
+}
+
+/* ======================================
+   Alert Banners
+   ====================================== */
+.alert-banner {
+  padding: 16px 20px;
+  border-radius: var(--radius-lg);
+  margin: 32px auto 24px;
+  max-width: 720px;
+  border: 1px solid;
+}
+
+.banner-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.banner-icon {
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.banner-text {
+  flex: 1;
+}
+
+.banner-text strong {
+  display: block;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.banner-text p {
+  margin: 0;
+  font-size: 0.875rem;
+  opacity: 0.85;
+}
+
+.approval-required {
+  background: var(--amber-light);
+  border-color: #fde68a;
+  color: #92400e;
+}
+
+.ready-pickup {
+  background: var(--emerald-light);
+  border-color: #a7f3d0;
+  color: #065f46;
+}
+
+/* ======================================
+   Main Card - Ticket Info
+   ====================================== */
+.ticket-main-card {
+  background: white;
+  border-radius: var(--radius-xl);
+  padding: 28px 32px;
+  margin: 0 auto 24px;
+  max-width: 720px;
+  border: 1px solid var(--gray-200);
+}
+
+.ticket-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 28px;
+}
+
+.ticket-code-section .label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--gray-500);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 6px;
+}
+
+.ticket-code {
+  font-size: 1.625rem;
+  font-weight: 700;
+  color: var(--primary);
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  letter-spacing: 0;
+}
+
+.status-badge {
+  padding: 8px 16px;
+  border-radius: 100px;
+  color: white;
+  font-weight: 600;
+  font-size: 0.8125rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+/* ======================================
+   Progress Section
+   ====================================== */
+.progress-section {
+  margin-top: 0;
+}
+
+.progress-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  font-size: 0.875rem;
+}
+
+.progress-header span:first-child {
+  color: var(--gray-600);
+  font-weight: 500;
+}
+
+.progress-percent {
+  font-weight: 700;
+  color: var(--primary);
+  font-size: 0.9375rem;
+}
+
+.progress-bar {
+  height: 8px;
+  background: var(--gray-100);
+  border-radius: 100px;
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 100px;
+  transition: width 0.5s ease;
+}
+
+.progress-steps {
+  display: flex;
+  justify-content: space-between;
+}
+
+.step {
+  font-size: 0.6875rem;
+  color: var(--gray-400);
+  text-align: center;
+  flex: 1;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.step.completed {
+  color: var(--primary);
+  font-weight: 600;
+}
+
+/* ======================================
+   Info Cards
+   ====================================== */
+.info-card {
+  background: white;
+  border-radius: var(--radius-lg);
+  padding: 24px 28px;
+  margin: 0 auto 16px;
+  max-width: 720px;
+  border: 1px solid var(--gray-200);
+}
+
+.info-card h3 {
+  margin: 0 0 20px;
+  color: var(--gray-800);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.info-item .label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--gray-400);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.info-item .value {
+  color: var(--gray-800);
+  font-weight: 600;
+  font-size: 0.9375rem;
+}
+
+.description {
+  color: var(--gray-600);
+  line-height: 1.7;
+  margin: 0;
+  font-size: 0.9375rem;
+}
+
+/* ======================================
+   Budget Card
+   ====================================== */
+.budget-card {
+  text-align: center;
+}
+
+.budget-card.needs-approval {
+  border: 2px solid #fde68a;
+  background: linear-gradient(180deg, #fffbeb 0%, white 100%);
+}
+
+.budget-amount {
+  font-size: 2.75rem;
+  font-weight: 800;
+  color: var(--primary);
+  margin: 8px 0 20px;
+  letter-spacing: -0.02em;
+}
+
+.approval-section {
+  padding-top: 20px;
+  border-top: 1px solid var(--gray-100);
+}
+
+.approval-text {
+  color: var(--gray-600);
+  margin: 0 0 20px;
+  font-size: 0.9375rem;
+}
+
+.approval-buttons {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.btn-approve {
+  background: var(--emerald);
+  color: white;
+  border: none;
+  padding: 14px 28px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  transition: var(--transition);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-approve:hover:not(:disabled) {
+  background: #059669;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.btn-approve:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-reject {
+  background: white;
+  color: var(--rose);
+  border: 2px solid var(--rose);
+  padding: 12px 28px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  transition: var(--transition);
+}
+
+.btn-reject:hover:not(:disabled) {
+  background: var(--rose-light);
+}
+
+.btn-reject:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.approval-status {
+  padding: 14px 20px;
+  border-radius: var(--radius);
+  font-weight: 600;
+  font-size: 0.9375rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.approval-status.approved {
+  background: var(--emerald-light);
+  color: #047857;
+}
+
+.approval-status.rejected {
+  background: var(--rose-light);
+  color: #be123c;
+}
+
+/* ======================================
+   Dates Grid
+   ====================================== */
+.dates-grid {
+  display: flex;
+  gap: 32px;
+  flex-wrap: wrap;
+}
+
+.date-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.date-label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--gray-400);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.date-value {
+  color: var(--gray-800);
+  font-weight: 600;
+  font-size: 0.9375rem;
+}
+
+/* ======================================
+   Timeline
+   ====================================== */
+.timeline {
+  position: relative;
+  padding-left: 24px;
+}
+
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 5px;
+  top: 8px;
+  bottom: 8px;
+  width: 2px;
+  background: var(--gray-200);
+  border-radius: 2px;
+}
+
+.timeline-item {
+  position: relative;
+  padding-bottom: 20px;
+}
+
+.timeline-item:last-child {
+  padding-bottom: 0;
+}
+
+.timeline-dot {
+  position: absolute;
+  left: -24px;
+  top: 6px;
+  width: 12px;
+  height: 12px;
+  background: var(--primary);
+  border-radius: 50%;
+  border: 3px solid white;
+  box-shadow: 0 0 0 2px var(--primary);
+}
+
+.timeline-content {
+  background: var(--gray-50);
+  padding: 16px 20px;
+  border-radius: var(--radius);
+  border: 1px solid var(--gray-100);
+}
+
+.timeline-date {
+  font-size: 0.75rem;
+  color: var(--gray-400);
+  font-weight: 500;
+}
+
+.timeline-action {
+  display: block;
+  font-weight: 600;
+  color: var(--gray-800);
+  margin: 6px 0;
+  font-size: 0.875rem;
+}
+
+.timeline-note {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--gray-600);
+  line-height: 1.5;
+}
+
+/* ======================================
+   Actions Section
+   ====================================== */
+.actions-section {
+  margin: 32px auto 0;
+  max-width: 720px;
+  padding: 0 32px;
+  text-align: center;
+}
+
+.btn-secondary {
+  background: white;
+  color: var(--primary);
+  border: 2px solid var(--primary);
+  padding: 14px 28px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  transition: var(--transition);
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: var(--primary);
+  color: white;
+}
+
+.btn-secondary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ======================================
+   Responsive
+   ====================================== */
+@media (max-width: 768px) {
+  .page-header {
+    padding: 16px 20px;
+  }
+  
+  .page-header h1 {
+    font-size: 1.25rem;
+  }
+  
+  .alert-banner {
+    margin: 20px 16px;
+  }
+  
+  .ticket-main-card,
+  .info-card {
+    margin-left: 16px;
+    margin-right: 16px;
+    padding: 20px;
+  }
+  
+  .ticket-code {
+    font-size: 1.375rem;
+  }
+  
+  .info-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .ticket-header {
+    flex-direction: column;
+    gap: 16px;
+    align-items: flex-start;
+  }
+
+  .approval-buttons {
+    flex-direction: column;
+  }
+  
+  .btn-approve,
+  .btn-reject {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .dates-grid {
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .actions-section {
+    padding: 0 16px;
+  }
+  
+  .btn-secondary {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .budget-amount {
+    font-size: 2.25rem;
+  }
+  
+  .progress-steps {
+    display: none;
+  }
+}

@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block content %}
+<p class="greeting" style="font-size: 18px; color: #333333; margin: 0 0 20px 0;">
+    Hola <strong>{{ client_name }}</strong>,
+</p>
+
+<p class="message" style="font-size: 15px; color: #555555; line-height: 1.6; margin: 0 0 24px 0;">
+    Tu ticket de servicio ha sido cerrado. A continuación te presentamos un resumen completo del servicio.
+</p>
+
+<!-- Status Box - Closed -->
+<div class="status-box" style="background-color: #f5f5f5; border-left: 4px solid #737373; padding: 20px 24px; margin: 24px 0; border-radius: 0 8px 8px 0;">
+    <p class="status-label" style="font-size: 12px; color: #525252; text-transform: uppercase; letter-spacing: 0.5px; margin: 0 0 8px 0;">Estado del servicio</p>
+    <p class="status-value" style="font-size: 20px; font-weight: 600; color: #525252; margin: 0;">📁 Caso cerrado</p>
+</div>
+
+<!-- Full Service Summary -->
+<table role="presentation" cellspacing="0" cellpadding="0" width="100%" style="background-color: #f8f9fa; border-radius: 8px; margin: 24px 0; border: 0;">
+    <tr>
+        <td style="padding: 24px;">
+            <h3 style="font-size: 16px; color: #333333; margin: 0 0 16px 0;">Resumen completo del servicio</h3>
+            <table role="presentation" cellspacing="0" cellpadding="0" width="100%" style="border: 0;">
+                <tr>
+                    <td style="padding: 12px 0; border-bottom: 1px solid #e5e5e5;">
+                        <span style="font-size: 14px; color: #666666;">Código de seguimiento</span>
+                    </td>
+                    <td style="padding: 12px 0; border-bottom: 1px solid #e5e5e5; text-align: right;">
+                        <strong style="font-size: 14px; color: #1a5c3a; font-family: monospace;">{{ tracking_code }}</strong>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px 0; border-bottom: 1px solid #e5e5e5;">
+                        <span style="font-size: 14px; color: #666666;">Equipo</span>
+                    </td>
+                    <td style="padding: 12px 0; border-bottom: 1px solid #e5e5e5; text-align: right;">
+                        <span style="font-size: 14px; color: #333333;">{{ device_brand }} {{ device_model }}</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px 0; border-bottom: 1px solid #e5e5e5;">
+                        <span style="font-size: 14px; color: #666666;">Fecha de ingreso</span>
+                    </td>
+                    <td style="padding: 12px 0; border-bottom: 1px solid #e5e5e5; text-align: right;">
+                        <span style="font-size: 14px; color: #333333;">{{ intake_date }}</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px 0; border-bottom: 1px solid #e5e5e5;">
+                        <span style="font-size: 14px; color: #666666;">Fecha de cierre</span>
+                    </td>
+                    <td style="padding: 12px 0; border-bottom: 1px solid #e5e5e5; text-align: right;">
+                        <span style="font-size: 14px; color: #333333;">{{ close_date }}</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px 0; border-bottom: 1px solid #e5e5e5;">
+                        <span style="font-size: 14px; color: #666666;">Estado final</span>
+                    </td>
+                    <td style="padding: 12px 0; border-bottom: 1px solid #e5e5e5; text-align: right;">
+                        {% if final_status == 'Reparado' %}
+                        <span style="font-size: 14px; color: #22c55e; font-weight: 600;">✓ {{ final_status }}</span>
+                        {% elif final_status == 'No reparado' %}
+                        <span style="font-size: 14px; color: #ef4444; font-weight: 600;">✗ {{ final_status }}</span>
+                        {% else %}
+                        <span style="font-size: 14px; color: #666666;">{{ final_status }}</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% if total_cost > 0 %}
+                <tr>
+                    <td style="padding: 12px 0;">
+                        <span style="font-size: 14px; color: #666666;">Total facturado</span>
+                    </td>
+                    <td style="padding: 12px 0; text-align: right;">
+                        <strong style="font-size: 16px; color: #1a5c3a;">${{ "{:,.0f}".format(total_cost) }}</strong>
+                    </td>
+                </tr>
+                {% endif %}
+            </table>
+        </td>
+    </tr>
+</table>
+
+{% if notes %}
+<!-- Resolution Notes -->
+<div style="background-color: #f8f9fa; border-radius: 8px; padding: 20px; margin: 24px 0;">
+    <h4 style="font-size: 14px; color: #666666; text-transform: uppercase; letter-spacing: 0.5px; margin: 0 0 12px 0;">Notas de cierre</h4>
+    <p style="font-size: 14px; color: #333333; line-height: 1.6; margin: 0;">{{ notes }}</p>
+</div>
+{% endif %}
+
+<!-- Record Keeping -->
+<div style="background-color: #f0f9ff; border: 1px solid #bae6fd; border-radius: 8px; padding: 16px 20px; margin: 24px 0;">
+    <p style="font-size: 13px; color: #0369a1; margin: 0; line-height: 1.5;">
+        <strong>Información importante:</strong> Este registro quedará disponible en tu portal de cliente por tiempo indefinido. Podrás consultarlo en cualquier momento para futuras referencias.
+    </p>
+</div>
+
+<!-- CTA Button -->
+<div style="text-align: center; margin: 32px 0;">
+    <a href="{{ portal_url }}" class="cta-button" style="display: inline-block; background-color: #1a5c3a; color: #ffffff !important; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-size: 15px; font-weight: 600;">
+        Ver mi historial completo
+    </a>
+</div>
+
+<!-- Feedback Section -->
+<div style="text-align: center; padding: 24px 0; border-top: 1px solid #e5e5e5; margin-top: 32px;">
+    <p style="font-size: 14px; color: #666666; margin: 0 0 8px 0;">¿Cómo fue tu experiencia?</p>
+    <p style="font-size: 14px; color: #999999; margin: 0;">Tu feedback nos ayuda a mejorar nuestro servicio.</p>
+</div>
+{% endblock %}

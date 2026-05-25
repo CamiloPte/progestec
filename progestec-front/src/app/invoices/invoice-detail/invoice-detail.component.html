@@ -1,0 +1,268 @@
+<app-authenticated-layout>
+  <section class="invoice-wrapper" *ngIf="invoice as inv; else loadingState">
+    <header class="invoice-header">
+      <div class="header-left">
+        <a class="link-back" routerLink="/facturacion">← Volver a facturas</a>
+        <p class="eyebrow">Factura</p>
+        <h1>{{ inv.invoice_number }}</h1>
+        <p class="subtitle">Ticket {{ inv.ticket_tracking_code || ('#' + inv.ticket_id) }}</p>
+      </div>
+      <div class="header-right">
+        <button 
+          class="btn btn-outline btn-pdf" 
+          type="button" 
+          (click)="downloadPdf()" 
+          [disabled]="downloadingPdf"
+          title="Descargar PDF"
+        >
+          <span class="pdf-icon">📄</span>
+          {{ downloadingPdf ? 'Descargando...' : 'Descargar PDF' }}
+        </button>
+        <span class="status-chip" [ngClass]="getStatusBadgeClass(inv.status)">
+          {{ inv.status | titlecase }}
+        </span>
+      </div>
+    </header>
+
+    <div class="invoice-body">
+      <!-- Formulario de edición para facturas DRAFT -->
+      <article class="card edit-card" *ngIf="canEditInvoice">
+        <div class="card-header">
+          <h2>Completar Factura</h2>
+          <span class="draft-badge">Borrador</span>
+        </div>
+        <p class="edit-description">
+          Esta factura fue generada automáticamente. Agrega la mano de obra, descuentos e impuestos antes de confirmarla.
+        </p>
+        
+        <div class="edit-form">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Repuestos (automático)</label>
+              <input type="text" [value]="'$' + (invoice?.parts_cost | number:'1.2-2')" disabled class="readonly-field" />
+            </div>
+            <div class="form-group">
+              <label>Mano de obra *</label>
+              <input type="number" [(ngModel)]="editForm.labor_cost" min="0" step="1000" placeholder="0" />
+            </div>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label>Descuento</label>
+              <input type="number" [(ngModel)]="editForm.discount_amount" min="0" step="1000" placeholder="0" />
+            </div>
+            <div class="form-group">
+              <label>Impuesto (%)</label>
+              <input type="number" [(ngModel)]="editForm.tax_percentage" min="0" max="100" step="1" placeholder="19" />
+            </div>
+          </div>
+          
+          <div class="form-group full-width">
+            <label>Notas</label>
+            <textarea [(ngModel)]="editForm.notes" rows="2" placeholder="Notas adicionales..."></textarea>
+          </div>
+        </div>
+        
+        <div class="edit-preview">
+          <div class="preview-row">
+            <span>Repuestos:</span>
+            <span>${{ editPreview.parts | number:'1.2-2' }}</span>
+          </div>
+          <div class="preview-row">
+            <span>Mano de obra:</span>
+            <span>${{ editPreview.labor | number:'1.2-2' }}</span>
+          </div>
+          <div class="preview-row" *ngIf="editPreview.discount > 0">
+            <span>Descuento:</span>
+            <span>-${{ editPreview.discount | number:'1.2-2' }}</span>
+          </div>
+          <div class="preview-row">
+            <span>Subtotal:</span>
+            <span>${{ editPreview.subtotal | number:'1.2-2' }}</span>
+          </div>
+          <div class="preview-row">
+            <span>Impuesto ({{ editPreview.taxPct }}%):</span>
+            <span>${{ editPreview.taxAmount | number:'1.2-2' }}</span>
+          </div>
+          <div class="preview-row total-row">
+            <span>Total:</span>
+            <span>${{ editPreview.total | number:'1.2-2' }}</span>
+          </div>
+        </div>
+        
+        <div class="edit-actions">
+          <span class="error" *ngIf="editForm.error">{{ editForm.error }}</span>
+          <button type="button" class="btn btn-light" (click)="saveInvoice()" [disabled]="editForm.saving">
+            Guardar borrador
+          </button>
+          <button type="button" class="btn btn-success" (click)="confirmInvoice()" [disabled]="editForm.saving">
+            {{ editForm.saving ? 'Guardando...' : 'Confirmar Factura' }}
+          </button>
+        </div>
+      </article>
+
+      <article class="card">
+        <h2>Resumen</h2>
+        <div class="summary-grid">
+          <div>
+            <p class="label">Cliente</p>
+            <p>{{ inv.client_name || ('Cliente #' + inv.client_id) }}</p>
+          </div>
+          <div>
+            <p class="label">Emisión</p>
+            <p>{{ inv.issue_date | date: 'dd/MM/yyyy' }}</p>
+          </div>
+          <div>
+            <p class="label">Vencimiento</p>
+            <p>{{ inv.due_date ? (inv.due_date | date: 'dd/MM/yyyy') : '--' }}</p>
+          </div>
+          <div>
+            <p class="label">Notas</p>
+            <p>{{ inv.notes || '--' }}</p>
+          </div>
+        </div>
+
+        <div class="amounts-grid">
+          <div>
+            <p class="label">Repuestos</p>
+            <p>${{ inv.parts_cost | number: '1.2-2' }}</p>
+          </div>
+          <div>
+            <p class="label">Mano de obra</p>
+            <p>${{ inv.labor_cost | number: '1.2-2' }}</p>
+          </div>
+          <div>
+            <p class="label">Descuento</p>
+            <p>${{ inv.discount_amount | number: '1.2-2' }}</p>
+          </div>
+          <div>
+            <p class="label">Subtotal</p>
+            <p>${{ inv.subtotal | number: '1.2-2' }}</p>
+          </div>
+          <div>
+            <p class="label">Impuesto ({{ inv.tax_percentage | number: '1.0-2' }}%)</p>
+            <p>${{ inv.tax_amount | number: '1.2-2' }}</p>
+          </div>
+          <div>
+            <p class="label">Total</p>
+            <p class="total-value">${{ inv.total | number: '1.2-2' }}</p>
+          </div>
+        </div>
+
+        <div class="balance-grid">
+          <div>
+            <p class="label">Pagado</p>
+            <p>${{ inv.total_paid | number: '1.2-2' }}</p>
+          </div>
+          <div>
+            <p class="label">Saldo pendiente</p>
+            <p [class.pending]="inv.outstanding_amount > 0">
+              ${{ inv.outstanding_amount | number: '1.2-2' }}
+            </p>
+          </div>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="card-header">
+          <h2>Pagos</h2>
+          <button
+            *ngIf="canRegisterPayment"
+            class="btn btn-dark"
+            type="button"
+            (click)="submitPayment()"
+            [disabled]="paymentForm.saving"
+          >
+            Registrar pago
+          </button>
+        </div>
+
+        <div class="payment-form" *ngIf="canRegisterPayment && inv.outstanding_amount > 0">
+          <div class="payment-quick-actions">
+            <button type="button" class="btn btn-outline" (click)="setFullPayment()">
+              Pago Total (${{ inv.outstanding_amount | number: '1.2-2' }})
+            </button>
+            <span class="divider">o ingresa un monto parcial:</span>
+          </div>
+          <div class="payment-fields">
+            <div>
+              <label>Monto</label>
+              <input 
+                type="number" 
+                [(ngModel)]="paymentForm.amount" 
+                placeholder="0.00"
+                [max]="inv.outstanding_amount"
+                min="0.01"
+                step="0.01"
+              />
+            </div>
+            <div>
+              <label>Método</label>
+              <select [(ngModel)]="paymentForm.payment_method">
+                <option value="CASH">Efectivo</option>
+                <option value="CARD">Tarjeta</option>
+                <option value="BANK_TRANSFER">Transferencia</option>
+                <option value="NEQUI">Nequi</option>
+              </select>
+            </div>
+            <div>
+              <label>Referencia</label>
+              <input type="text" [(ngModel)]="paymentForm.reference" placeholder="Opcional" />
+            </div>
+            <div>
+              <label>Fecha</label>
+              <input type="datetime-local" [(ngModel)]="paymentForm.paid_at" />
+            </div>
+          </div>
+          <div class="payment-actions">
+            <span class="error" *ngIf="paymentForm.error">{{ paymentForm.error }}</span>
+          </div>
+        </div>
+
+        <div class="paid-notice" *ngIf="inv.outstanding_amount <= 0">
+          <span class="paid-icon">✓</span>
+          <p>Esta factura está completamente pagada.</p>
+        </div>
+
+        <div class="payments-table">
+          <table>
+            <thead>
+              <tr>
+                <th>Fecha</th>
+                <th>Método</th>
+                <th>Monto</th>
+                <th>Referencia</th>
+                <th>Registrado por</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngIf="!inv.payments.length">
+                <td colspan="5" class="muted center">No hay pagos registrados.</td>
+              </tr>
+              <tr *ngFor="let payment of inv.payments">
+                <td>{{ payment.paid_at | date: 'dd/MM/yyyy HH:mm' }}</td>
+                <td>{{ payment.payment_method }}</td>
+                <td>${{ payment.amount | number: '1.2-2' }}</td>
+                <td>{{ payment.reference || '--' }}</td>
+                <td>{{ payment.created_by_name || '--' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <ng-template #loadingState>
+    <section class="invoice-wrapper">
+      <article class="card loading-state">
+        <p *ngIf="error; else loadingText" class="error">{{ error }}</p>
+        <ng-template #loadingText>
+          <div class="spinner-border" role="status"></div>
+          <p class="muted">Cargando factura...</p>
+        </ng-template>
+      </article>
+    </section>
+  </ng-template>
+</app-authenticated-layout>
