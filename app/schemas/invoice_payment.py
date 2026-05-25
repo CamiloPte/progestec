@@ -17,6 +17,7 @@ class InvoicePaymentCreate(InvoicePaymentBase):
 
 class InvoicePaymentCreateFromInvoice(InvoicePaymentBase):
     """Payload para registrar pago (invoice_id viene en el path)."""
+
     pass
 
 

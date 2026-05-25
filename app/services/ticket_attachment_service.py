@@ -11,6 +11,7 @@ from app.models.ticket import Ticket
 from app.models.ticket_attachment import TicketAttachment
 from app.schemas.ticket_attachment import TicketAttachmentCreate
 
+
 class TicketAttachmentService:
     """Gestiona la lógica de almacenamiento local de archivos adjuntos."""
 
@@ -26,13 +27,13 @@ class TicketAttachmentService:
         history_id: Optional[int] = None,
     ) -> TicketAttachment:
         media_root = Path(settings.MEDIA_ROOT)
-        storage_dir = media_root / 'tickets' / str(ticket.id)
+        storage_dir = media_root / "tickets" / str(ticket.id)
         storage_dir.mkdir(parents=True, exist_ok=True)
 
         unique_name = f"{uuid4().hex}_{file.filename}"
         destination = storage_dir / unique_name
 
-        with destination.open('wb') as buffer:
+        with destination.open("wb") as buffer:
             buffer.write(file.file.read())
 
         relative_path = destination.relative_to(media_root)
@@ -46,7 +47,7 @@ class TicketAttachmentService:
             stored_name=unique_name,
             file_url=file_url,
             mime_type=file.content_type,
-            file_size=getattr(file, 'size', None),
+            file_size=getattr(file, "size", None),
             note=note,
             uploaded_by=uploaded_by,
         )
@@ -55,7 +56,7 @@ class TicketAttachmentService:
 
     def delete_attachment(self, db: Session, attachment: TicketAttachment) -> None:
         media_root = Path(settings.MEDIA_ROOT)
-        file_path = media_root / 'tickets' / str(attachment.ticket_id) / attachment.stored_name
+        file_path = media_root / "tickets" / str(attachment.ticket_id) / attachment.stored_name
         if file_path.exists():
             file_path.unlink()
         ticket_attachment_crud.soft_delete(db, attachment)

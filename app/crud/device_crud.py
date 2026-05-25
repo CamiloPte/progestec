@@ -1,6 +1,8 @@
 from typing import Optional, Sequence
+
 from sqlalchemy.orm import Session
-from app.models.device import Device  
+
+from app.models.device import Device
 
 
 class DeviceCRUD:
@@ -40,23 +42,11 @@ class DeviceCRUD:
         return obj
 
     def get_active(self, db: Session, device_id: int) -> Optional[Device]:
-        return (
-            db.query(Device)
-            .filter(
-                Device.id == device_id,
-                Device.state == 1
-            )
-            .first()
-        )
+        return db.query(Device).filter(Device.id == device_id, Device.state == 1).first()
 
     def list_by_owner(self, db: Session, owner_user_id: int) -> Sequence[Device]:
         return (
-            db.query(Device)
-            .filter(
-                Device.owner_user_id == owner_user_id,
-                Device.state == 1
-            )
-            .all()
+            db.query(Device).filter(Device.owner_user_id == owner_user_id, Device.state == 1).all()
         )
 
 

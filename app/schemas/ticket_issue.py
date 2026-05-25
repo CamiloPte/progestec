@@ -1,11 +1,13 @@
-from typing import Optional
 from datetime import datetime
+from typing import Optional
+
 from app.schemas.common import BaseSchema, TimestampSchema
+
 
 class TicketIssueBase(BaseSchema):
     ticket_id: int
-    type: str            # REPORTED | DISCOVERED
-    title: str           # Ej: "No enciende", "Pantalla rota", "Batería inflada"
+    type: str  # REPORTED | DISCOVERED
+    title: str  # Ej: "No enciende", "Pantalla rota", "Batería inflada"
     description: Optional[str] = None
 
 

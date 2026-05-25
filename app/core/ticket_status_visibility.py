@@ -1,11 +1,11 @@
-from typing import Optional, Set, Dict
+from typing import Dict, Optional, Set
 
 from app.core.roles import (
     ROLE_ADMIN,
     ROLE_ADVISOR,
-    ROLE_TECHNICIAN,
     ROLE_CLIENT,
     ROLE_COURIER,
+    ROLE_TECHNICIAN,
 )
 
 # Estados que puede ver/seleccionar cada rol.

@@ -1,8 +1,9 @@
 from typing import List
+
 from sqlalchemy.orm import Session
 
-from app.models.user import User
 from app.crud.module_role_crud import module_role_crud
+from app.models.user import User
 
 
 class ModuleAccessService:

@@ -1,7 +1,9 @@
 from sqlalchemy import Column, String
 from sqlalchemy.orm import relationship
+
 from app.db.base_class import Base
-from app.models.mixins import TimestampStateMixin, PKMixin
+from app.models.mixins import PKMixin, TimestampStateMixin
+
 
 class Attribute(Base, PKMixin, TimestampStateMixin):
     __tablename__ = "attributes"
@@ -9,4 +11,6 @@ class Attribute(Base, PKMixin, TimestampStateMixin):
     name = Column(String(100), nullable=False)
     description = Column(String(255))
 
-    attribute_users = relationship("AttributeUser", back_populates="attribute", cascade="all,delete", passive_deletes=True)
+    attribute_users = relationship(
+        "AttributeUser", back_populates="attribute", cascade="all,delete", passive_deletes=True
+    )

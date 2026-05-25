@@ -1,7 +1,9 @@
-from sqlalchemy import Column, String, Numeric
+from sqlalchemy import Column, Numeric, String
 from sqlalchemy.orm import relationship
+
 from app.db.base_class import Base
-from app.models.mixins import TimestampStateMixin, PKMixin
+from app.models.mixins import PKMixin, TimestampStateMixin
+
 
 class Service(Base, PKMixin, TimestampStateMixin):
     __tablename__ = "services"

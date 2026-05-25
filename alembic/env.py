@@ -1,11 +1,12 @@
 import os
 import sys
-from pathlib import Path
 from logging.config import fileConfig
+from pathlib import Path
+
+from dotenv import load_dotenv
+from sqlalchemy import engine_from_config, pool
 
 from alembic import context
-from sqlalchemy import engine_from_config, pool
-from dotenv import load_dotenv
 
 # 1) Cargar variables de entorno
 proj_root = Path(__file__).resolve().parent.parent
@@ -37,16 +38,19 @@ from app.db.base import Base  # <- IMPORTANTE: este ya importa todos los modelos
 
 target_metadata = Base.metadata
 
+
 # 7) Métodos de migración
 def run_migrations_offline() -> None:
     url = config.get_main_option("sqlalchemy.url")
     context.configure(
-        url=url, target_metadata=target_metadata,
+        url=url,
+        target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
     )
     with context.begin_transaction():
         context.run_migrations()
+
 
 def run_migrations_online() -> None:
     connectable = engine_from_config(
@@ -55,12 +59,10 @@ def run_migrations_online() -> None:
         poolclass=pool.NullPool,
     )
     with connectable.connect() as connection:
-        context.configure(
-            connection=connection,
-            target_metadata=target_metadata
-        )
+        context.configure(connection=connection, target_metadata=target_metadata)
         with context.begin_transaction():
             context.run_migrations()
+
 
 if context.is_offline_mode():
     run_migrations_offline()

@@ -1,5 +1,5 @@
-from typing import Optional, Dict
 from datetime import datetime
+from typing import Dict, Optional
 
 from app.schemas.common import BaseSchema, TimestampSchema
 

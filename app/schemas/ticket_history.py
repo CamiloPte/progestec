@@ -1,6 +1,8 @@
-from typing import Optional
 from datetime import datetime
+from typing import Optional
+
 from app.schemas.common import BaseSchema
+
 
 class TicketHistoryBase(BaseSchema):
     ticket_id: int

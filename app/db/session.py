@@ -4,7 +4,7 @@ import time
 from typing import Generator
 
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm import Session, sessionmaker
 
 from app.core.config import settings
 
@@ -59,6 +59,7 @@ SessionLocal = sessionmaker(
 # ======================================================================
 # 3. Dependencia para FastAPI: get_db()
 # ======================================================================
+
 
 def get_db() -> Generator[Session, None, None]:
     """

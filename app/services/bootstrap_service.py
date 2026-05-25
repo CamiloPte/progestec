@@ -1,8 +1,9 @@
 from sqlalchemy.orm import Session
-from app.crud.role_crud import role_crud
-from app.crud.ticket_status_crud import ticket_status_crud
+
 from app.crud.module_crud import module_crud
 from app.crud.module_role_crud import module_role_crud
+from app.crud.role_crud import role_crud
+from app.crud.ticket_status_crud import ticket_status_crud
 
 DEFAULT_ROLES = [
     ("ADMIN", "Full access / owner"),
@@ -36,10 +37,11 @@ DEFAULT_MODULES = [
 MODULE_ROLE_MATRIX = {
     "ADMIN": ["DASHBOARD", "TICKETS", "USERS", "DEVICES", "INVENTORY", "REPORTS", "FINANCE"],
     "ADVISOR": ["DASHBOARD", "TICKETS", "DEVICES", "INVENTORY", "FINANCE"],
-    "TECHNICIAN": ["DASHBOARD", "TICKETS","INVENTORY"],
+    "TECHNICIAN": ["DASHBOARD", "TICKETS", "INVENTORY"],
     "CLIENT": ["DASHBOARD"],
     "COURIER": ["DASHBOARD", "TICKETS"],
 }
+
 
 class BootstrapService:
     def bootstrap(self, db: Session) -> dict:
@@ -94,5 +96,6 @@ class BootstrapService:
             "modules_created": created_modules,
             "module_roles_created": created_permissions,
         }
+
 
 bootstrap_service = BootstrapService()

@@ -1,34 +1,41 @@
 # app/api/routes/ticket.py
-from typing import List, Optional
+import io
 from datetime import datetime
+from typing import List, Optional
 
-from fastapi import APIRouter, Depends, Query, UploadFile, File, Form, HTTPException, status, Response
+from fastapi import (
+    APIRouter,
+    Depends,
+    File,
+    Form,
+    HTTPException,
+    Query,
+    Response,
+    UploadFile,
+    status,
+)
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
-import io
 
-from app.db.session import get_db
+from app.core.roles import ROLE_ADMIN, ROLE_ADVISOR, ROLE_CLIENT, get_role_name
 from app.core.security_deps import get_current_user
+from app.crud.ticket_attachment_crud import ticket_attachment_crud
+from app.crud.ticket_crud import ticket_crud
+from app.crud.ticket_status_crud import ticket_status_crud
+from app.db.session import get_db
 from app.models.user import User
-from app.core.roles import get_role_name, ROLE_CLIENT, ROLE_ADMIN, ROLE_ADVISOR
-
 from app.schemas.ticket import (
     TicketCreate,
-    TicketUpdate,
-    TicketReadMinimal,
     TicketReadDetail,
+    TicketReadMinimal,
+    TicketUpdate,
 )
 from app.schemas.ticket_attachment import TicketAttachmentRead
 from app.schemas.ticket_part import TicketPartCreate, TicketPartRead
-
-from app.services.ticket_service import ticket_service
-from app.services.ticket_attachment_service import ticket_attachment_service
 from app.services.pdf_service import pdf_service
-from app.crud.ticket_crud import ticket_crud
-from app.crud.ticket_attachment_crud import ticket_attachment_crud
-from app.crud.ticket_status_crud import ticket_status_crud
-
+from app.services.ticket_attachment_service import ticket_attachment_service
+from app.services.ticket_service import ticket_service
 
 router = APIRouter(prefix="/tickets", tags=["tickets"])
 
@@ -38,6 +45,7 @@ class TicketAssignRequest(BaseModel):
     Payload para asignar o desasignar un técnico.
     - assignee_user_id: id del técnico (USER con rol TECHNICIAN) o null para dejar sin asignar.
     """
+
     assignee_user_id: Optional[int] = None
 
 
@@ -45,6 +53,7 @@ class QuoteResponseRequest(BaseModel):
     """
     Payload para aprobar o rechazar una cotización.
     """
+
     approved: bool
     rejection_reason: Optional[str] = None
 
@@ -149,43 +158,38 @@ def respond_to_quote(
     """
     # Verificar que el usuario es cliente o admin
     role = get_role_name(current_user)
-    
+
     # Obtener ticket
     db_ticket = ticket_crud.get_by_id(db, ticket_id)
     if not db_ticket or db_ticket.state != 1:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Ticket no encontrado"
-        )
-    
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ticket no encontrado")
+
     # Verificar que el ticket pertenece al cliente (o es admin/asesor)
     if role == ROLE_CLIENT:
         if not db_ticket.device or db_ticket.device.owner_user_id != current_user.id:
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Este ticket no te pertenece"
+                status_code=status.HTTP_403_FORBIDDEN, detail="Este ticket no te pertenece"
             )
     elif role not in (ROLE_ADMIN, ROLE_ADVISOR):
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="No tienes permiso para esta acción"
+            status_code=status.HTTP_403_FORBIDDEN, detail="No tienes permiso para esta acción"
         )
-    
+
     # Verificar que está en estado WAITING_APPROVAL
-    current_status = (db_ticket.status.code.upper() if db_ticket.status else "")
+    current_status = db_ticket.status.code.upper() if db_ticket.status else ""
     if current_status != "WAITING_APPROVAL":
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"El ticket no está en estado de espera de aprobación. Estado actual: {current_status}"
+            detail=f"El ticket no está en estado de espera de aprobación. Estado actual: {current_status}",
         )
-    
+
     # Obtener el status_id para REPAIRING o CANCELLED
     if payload.approved:
         new_status = ticket_status_crud.get_by_code(db, "REPAIRING")
         if not new_status:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Estado REPAIRING no encontrado en el sistema"
+                detail="Estado REPAIRING no encontrado en el sistema",
             )
         history_note = "Cotización aprobada por el cliente"
     else:
@@ -193,18 +197,15 @@ def respond_to_quote(
         if not new_status:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Estado CANCELLED no encontrado en el sistema"
+                detail="Estado CANCELLED no encontrado en el sistema",
             )
-        history_note = f"Cotización rechazada por el cliente"
+        history_note = "Cotización rechazada por el cliente"
         if payload.rejection_reason:
             history_note += f": {payload.rejection_reason}"
-    
+
     # Actualizar ticket (usar sistema existente para registrar historia y notificaciones)
-    update_data = TicketUpdate(
-        status_id=new_status.id,
-        history_note=history_note
-    )
-    
+    update_data = TicketUpdate(status_id=new_status.id, history_note=history_note)
+
     return ticket_service.update_ticket(db, current_user, ticket_id, update_data)
 
 
@@ -295,6 +296,7 @@ def delete_ticket_attachment(
 
 # ---------- NUEVOS ENDPOINTS: REPUESTOS POR TICKET ----------
 
+
 @router.post("/{ticket_id}/parts", response_model=TicketPartRead, status_code=201)
 def add_ticket_part(
     ticket_id: int,
@@ -327,6 +329,8 @@ def list_ticket_parts(
         current_user=current_user,
         ticket_id=ticket_id,
     )
+
+
 @router.delete("/{ticket_id}/parts/{ticket_part_id}", status_code=204)
 def remove_ticket_part(
     ticket_id: int,
@@ -348,6 +352,7 @@ def remove_ticket_part(
 
 # ---------- ENDPOINTS PDF ----------
 
+
 @router.get("/{ticket_id}/pdf/reception")
 def download_reception_pdf(
     ticket_id: int,
@@ -358,11 +363,11 @@ def download_reception_pdf(
     Descarga el comprobante de recepción del ticket en PDF.
     """
     detail = ticket_service.get_ticket_detail(db, ticket_id, current_user)
-    
+
     # Extraer datos del owner y device (que son objetos anidados)
     owner = detail.owner
     device = detail.device
-    
+
     # Preparar datos para el PDF
     ticket_data = {
         "tracking_code": detail.tracking_code,
@@ -379,15 +384,15 @@ def download_reception_pdf(
         "cost_estimate": detail.cost_estimate,
         "technician_name": detail.assignee_name,
     }
-    
+
     pdf_bytes = pdf_service.generate_reception_pdf(ticket_data)
-    
+
     return StreamingResponse(
         io.BytesIO(pdf_bytes),
         media_type="application/pdf",
         headers={
             "Content-Disposition": f'attachment; filename="recepcion_{detail.tracking_code}.pdf"'
-        }
+        },
     )
 
 
@@ -401,11 +406,11 @@ def download_delivery_pdf(
     Descarga la orden de entrega del ticket en PDF.
     """
     detail = ticket_service.get_ticket_detail(db, ticket_id, current_user)
-    
+
     # Extraer datos del owner y device (que son objetos anidados)
     owner = detail.owner
     device = detail.device
-    
+
     # Obtener repuestos usados
     parts = ticket_service.list_ticket_parts(db, current_user=current_user, ticket_id=ticket_id)
     parts_list = [
@@ -417,7 +422,7 @@ def download_delivery_pdf(
         }
         for p in parts
     ]
-    
+
     # Datos de factura si existe
     invoice_number = None
     invoice_total = 0
@@ -428,7 +433,7 @@ def download_delivery_pdf(
         invoice_number = ticket.invoice.invoice_number
         invoice_total = float(ticket.invoice.total or 0)
         invoice_status = ticket.invoice.status
-    
+
     ticket_data = {
         "tracking_code": detail.tracking_code,
         "delivered_at": detail.delivered_at,
@@ -448,13 +453,13 @@ def download_delivery_pdf(
         "invoice_total": invoice_total,
         "invoice_status": invoice_status,
     }
-    
+
     pdf_bytes = pdf_service.generate_delivery_pdf(ticket_data)
-    
+
     return StreamingResponse(
         io.BytesIO(pdf_bytes),
         media_type="application/pdf",
         headers={
             "Content-Disposition": f'attachment; filename="entrega_{detail.tracking_code}.pdf"'
-        }
+        },
     )

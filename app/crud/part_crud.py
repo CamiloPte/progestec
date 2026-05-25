@@ -1,6 +1,7 @@
-from typing import Optional, Sequence, Dict, Any
-from sqlalchemy.orm import Session
+from typing import Any, Dict, Optional, Sequence
+
 from sqlalchemy import func
+from sqlalchemy.orm import Session
 
 from app.models.part import Part
 
@@ -18,10 +19,7 @@ class PartCRUD:
 
         if search:
             term = f"%{search.lower()}%"
-            query = query.filter(
-                func.lower(Part.name).like(term)
-                | func.lower(Part.sku).like(term)
-            )
+            query = query.filter(func.lower(Part.name).like(term) | func.lower(Part.sku).like(term))
 
         if category:
             query = query.filter(func.lower(Part.category) == category.lower())

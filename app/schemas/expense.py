@@ -1,6 +1,7 @@
-from typing import Optional, List
 from datetime import datetime
 from decimal import Decimal
+from typing import Optional
+
 from pydantic import Field
 
 from app.schemas.common import BaseSchema, TimestampSchema

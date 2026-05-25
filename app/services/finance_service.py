@@ -1,31 +1,29 @@
 from __future__ import annotations
 
 from datetime import datetime
-from decimal import Decimal
-from typing import List, Optional, Dict, Any
+from typing import List, Optional
 
-from fastapi import HTTPException, status
-from sqlalchemy.orm import Session
-from sqlalchemy import func
 from dateutil.relativedelta import relativedelta
+from fastapi import HTTPException, status
+from sqlalchemy import func
+from sqlalchemy.orm import Session
 
 from app.core.roles import ROLE_ADMIN, ROLE_ADVISOR, get_role_name
-from app.crud.expense_crud import expense_crud, expense_category_crud
+from app.crud.expense_crud import expense_category_crud, expense_crud
 from app.crud.invoice_crud import invoice_crud
-from app.crud.invoice_payment_crud import invoice_payment_crud
 from app.models.expense import Expense, ExpenseCategory
 from app.models.invoice import Invoice
 from app.models.invoice_payment import InvoicePayment
 from app.models.user import User
 from app.schemas.expense import (
-    ExpenseCreate,
-    ExpenseRead,
     ExpenseCategoryCreate,
     ExpenseCategoryRead,
+    ExpenseCreate,
+    ExpenseRead,
 )
 from app.schemas.finance import (
-    FinanceSummary,
     CategoryExpenseSummary,
+    FinanceSummary,
     PeriodMetrics,
     TopClient,
 )
@@ -147,9 +145,7 @@ class FinanceService:
         db.commit()
         return self._map_expense(expense_crud.get(db, expense.id))
 
-    def get_expense(
-        self, db: Session, *, current_user: User, expense_id: int
-    ) -> ExpenseRead:
+    def get_expense(self, db: Session, *, current_user: User, expense_id: int) -> ExpenseRead:
         self._ensure_finance_access(current_user)
 
         expense = expense_crud.get(db, expense_id)
@@ -179,9 +175,7 @@ class FinanceService:
         )
         return [self._map_expense(exp) for exp in expenses]
 
-    def delete_expense(
-        self, db: Session, *, current_user: User, expense_id: int
-    ) -> None:
+    def delete_expense(self, db: Session, *, current_user: User, expense_id: int) -> None:
         self._ensure_finance_access(current_user)
 
         expense = expense_crud.get(db, expense_id)
@@ -302,13 +296,10 @@ class FinanceService:
             month_end = (month_start + relativedelta(months=1)) - relativedelta(seconds=1)
 
             # Ingresos del mes (pagos recibidos)
-            income_query = (
-                db.query(func.coalesce(func.sum(InvoicePayment.amount), 0))
-                .filter(
-                    InvoicePayment.state == 1,
-                    InvoicePayment.paid_at >= month_start,
-                    InvoicePayment.paid_at <= month_end,
-                )
+            income_query = db.query(func.coalesce(func.sum(InvoicePayment.amount), 0)).filter(
+                InvoicePayment.state == 1,
+                InvoicePayment.paid_at >= month_start,
+                InvoicePayment.paid_at <= month_end,
             )
             income = float(income_query.scalar() or 0)
 
@@ -336,14 +327,11 @@ class FinanceService:
         limit: int = 5,
     ) -> List[TopClient]:
         """Obtiene los clientes con más ingresos."""
-        query = (
-            db.query(
-                Invoice.client_id,
-                func.coalesce(func.sum(Invoice.total), 0).label("total_billed"),
-                func.count(Invoice.id).label("invoices_count"),
-            )
-            .filter(Invoice.state == 1)
-        )
+        query = db.query(
+            Invoice.client_id,
+            func.coalesce(func.sum(Invoice.total), 0).label("total_billed"),
+            func.count(Invoice.id).label("invoices_count"),
+        ).filter(Invoice.state == 1)
 
         # Aplicar filtros ANTES de group_by, order_by y limit
         if from_date:
@@ -353,10 +341,7 @@ class FinanceService:
 
         # Ahora aplicar group_by, order_by y limit
         query = (
-            query
-            .group_by(Invoice.client_id)
-            .order_by(func.sum(Invoice.total).desc())
-            .limit(limit)
+            query.group_by(Invoice.client_id).order_by(func.sum(Invoice.total).desc()).limit(limit)
         )
 
         results = query.all()
@@ -365,6 +350,7 @@ class FinanceService:
         for r in results:
             # Obtener nombre del cliente
             from app.crud.user_crud import user_crud
+
             client = user_crud.get_by_id(db, r.client_id)
             client_name = "Cliente desconocido"
             if client:

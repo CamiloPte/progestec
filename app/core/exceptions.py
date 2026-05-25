@@ -1,9 +1,11 @@
 # [Revisión] Ver CHANGELOG_REVISION.md -> "app/core/exceptions.py"
 from datetime import datetime
 from typing import Any, Dict, Optional
-from fastapi import Request, HTTPException, status
-from fastapi.responses import JSONResponse
+
+from fastapi import HTTPException, Request, status
 from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
+
 from app.core.logger import logger
 
 
@@ -35,7 +37,7 @@ async def http_exception_handler(request: Request, exc: HTTPException):
     logger.warning(
         f"HTTPException {exc.status_code} at {request.method} {request.url.path}: {exc.detail}"
     )
-    
+
     error_type_map = {
         400: "BadRequest",
         401: "Unauthorized",
@@ -44,9 +46,9 @@ async def http_exception_handler(request: Request, exc: HTTPException):
         409: "Conflict",
         422: "ValidationError",
     }
-    
+
     error_type = error_type_map.get(exc.status_code, "HTTPError")
-    
+
     return JSONResponse(
         status_code=exc.status_code,
         content=_build_error_response(
@@ -64,16 +66,18 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     logger.warning(
         f"ValidationError at {request.method} {request.url.path}: {len(errors)} error(s)"
     )
-    
+
     formatted_errors = []
     for error in errors:
         field = " -> ".join(str(loc) for loc in error["loc"])
-        formatted_errors.append({
-            "field": field,
-            "message": error["msg"],
-            "type": error["type"],
-        })
-    
+        formatted_errors.append(
+            {
+                "field": field,
+                "message": error["msg"],
+                "type": error["type"],
+            }
+        )
+
     return JSONResponse(
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
         content=_build_error_response(
@@ -92,7 +96,7 @@ async def generic_exception_handler(request: Request, exc: Exception):
         f"Unhandled exception at {request.method} {request.url.path}: {type(exc).__name__}",
         exc_info=True,
     )
-    
+
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         content=_build_error_response(

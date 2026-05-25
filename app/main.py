@@ -1,28 +1,29 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.exceptions import RequestValidationError
+from fastapi.middleware.cors import CORSMiddleware
+
 # [Revisión] Ver CHANGELOG_REVISION.md -> "app/main.py"
 from fastapi.staticfiles import StaticFiles
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.exceptions import RequestValidationError
 
 from app.api.routes import (
-    ticket,
     auth,
-    devices,
-    setup,
-    users,
     dashboard,
-    ticket_status,
-    modules,
+    devices,
+    finance,
     inventory,
     invoice,
-    finance,
-)
-from app.core.exceptions import (
-    http_exception_handler,
-    validation_exception_handler,
-    generic_exception_handler,
+    modules,
+    setup,
+    ticket,
+    ticket_status,
+    users,
 )
 from app.core.config import settings
+from app.core.exceptions import (
+    generic_exception_handler,
+    http_exception_handler,
+    validation_exception_handler,
+)
 
 app = FastAPI(
     title="ProGesTec API",

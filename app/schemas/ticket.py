@@ -1,14 +1,16 @@
 # app/schemas/ticket.py
-from typing import Optional, List
 from datetime import datetime
 from decimal import Decimal
+from typing import List, Optional
+
 from pydantic import EmailStr
+
 from app.schemas.common import BaseSchema, TimestampSchema
-from app.schemas.ticket_status import TicketStatusRead
 from app.schemas.device import DeviceReadMinimal
-from app.schemas.ticket_issue import TicketIssueRead
-from app.schemas.ticket_history import TicketHistoryRead
 from app.schemas.ticket_attachment import TicketAttachmentRead
+from app.schemas.ticket_history import TicketHistoryRead
+from app.schemas.ticket_issue import TicketIssueRead
+from app.schemas.ticket_status import TicketStatusRead
 
 
 class TicketBase(BaseSchema):
@@ -53,6 +55,7 @@ class TicketReadMinimal(TimestampSchema):
     """
     Para listados. Ligero.
     """
+
     id: int
     tracking_code: str
 
@@ -64,7 +67,7 @@ class TicketReadMinimal(TimestampSchema):
     status_name: Optional[str] = None
 
     # NUEVO: listo para la tabla del front
-    device_label: Optional[str] = None   # ej: "iPhone 11 – No carga"
+    device_label: Optional[str] = None  # ej: "iPhone 11 – No carga"
     assignee_name: Optional[str] = None  # nombre del técnico
 
     state: int
@@ -74,6 +77,7 @@ class TicketReadDetail(TimestampSchema):
     """
     Para detalle. Completo/anidado.
     """
+
     id: int
     tracking_code: str
 
@@ -82,11 +86,11 @@ class TicketReadDetail(TimestampSchema):
 
     # técnico asignado
     assignee_user_id: Optional[int] = None
-    assignee_name: Optional[str] = None   # NUEVO
+    assignee_name: Optional[str] = None  # NUEVO
 
     # dispositivo
     device: DeviceReadMinimal
-    device_label: Optional[str] = None    # NUEVO
+    device_label: Optional[str] = None  # NUEVO
     owner: Optional[TicketOwnerInfo] = None
 
     # descripción / diagnóstico

@@ -3,10 +3,10 @@
 from fastapi import Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.db.session import get_db
-from app.models.user import User
 from app.core.jwt_utils import decode_access_token
 from app.core.security import OAUTH2_SCHEME
+from app.db.session import get_db
+from app.models.user import User
 
 
 def get_current_user(

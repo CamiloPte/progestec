@@ -1,26 +1,20 @@
 from typing import Optional
+
 from sqlalchemy.orm import Session
-from app.models.user import User
+
 from app.core.security import get_password_hash
+from app.models.user import User
 
 
 class UserCRUD:
     def get_by_id(self, db: Session, user_id: int) -> Optional[User]:
-        return (
-            db.query(User)
-            .filter(User.id == user_id, User.state == 1)
-            .first()
-        )
+        return db.query(User).filter(User.id == user_id, User.state == 1).first()
 
     def get_by_email(self, db: Session, email: str) -> Optional[User]:
-        return (
-            db.query(User)
-            .filter(User.email == email, User.state == 1)
-            .first()
-        )
+        return db.query(User).filter(User.email == email, User.state == 1).first()
+
     def get_all(self, db: Session) -> list[User]:
         return db.query(User).filter(User.state == 1).all()
-    
 
     def create_user(
         self,

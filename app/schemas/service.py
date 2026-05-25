@@ -1,5 +1,7 @@
 from typing import Optional
+
 from app.schemas.common import BaseSchema, TimestampSchema
+
 
 class ServiceBase(BaseSchema):
     name: str

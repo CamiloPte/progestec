@@ -1,12 +1,14 @@
-from typing import Optional
 from datetime import datetime
+from typing import Optional
+
 from app.schemas.common import BaseSchema, TimestampSchema
+
 
 class DeliveryOrderBase(BaseSchema):
     ticket_id: int
     courier_user_id: Optional[int] = None
-    code: str                      # código único de entrega/recogida
-    status: str                    # PENDING | PICKED | DELIVERED | CANCELLED
+    code: str  # código único de entrega/recogida
+    status: str  # PENDING | PICKED | DELIVERED | CANCELLED
 
 
 class DeliveryOrderCreate(DeliveryOrderBase):

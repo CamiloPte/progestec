@@ -4,18 +4,17 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.orm import Session
 
-from app.db.session import get_db
 from app.core.security_deps import get_current_user
+from app.db.session import get_db
 from app.models.user import User
 from app.schemas.expense import (
-    ExpenseCreate,
-    ExpenseRead,
     ExpenseCategoryCreate,
     ExpenseCategoryRead,
+    ExpenseCreate,
+    ExpenseRead,
 )
 from app.schemas.finance import FinanceSummary
 from app.services.finance_service import finance_service
-
 
 router = APIRouter(prefix="/finances", tags=["Finances"])
 
@@ -32,7 +31,7 @@ def get_finance_summary(
 ):
     """
     Obtiene resumen financiero completo.
-    
+
     - **from_date**: Fecha de inicio del período
     - **to_date**: Fecha fin del período
     - **include_trends**: Incluir tendencias mensuales
@@ -84,7 +83,7 @@ def list_expenses(
 ):
     """
     Lista gastos con filtros opcionales.
-    
+
     - **category_id**: Filtrar por categoría
     - **from_date**: Desde fecha
     - **to_date**: Hasta fecha
@@ -112,7 +111,7 @@ def create_expense(
 ):
     """
     Registra un nuevo gasto.
-    
+
     Si se incluye part_id y quantity, automáticamente se actualiza
     el stock del repuesto (compra de inventario).
     """

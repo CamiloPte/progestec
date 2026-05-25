@@ -1,21 +1,20 @@
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, Query, status, Response
+from fastapi import APIRouter, Depends, Query, Response, status
 from sqlalchemy.orm import Session
 
-from app.db.session import get_db
 from app.core.security_deps import get_current_user
+from app.db.session import get_db
 from app.schemas.part import (
-    PartRead,
-    PartDetailRead,
-    PartMovementRead,
-    PartMovementCreate,
     InventorySummary,
     PartCreate,
+    PartDetailRead,
+    PartMovementCreate,
+    PartMovementRead,
+    PartRead,
     PartUpdate,
 )
 from app.services.part_service import part_service
-
 
 router = APIRouter(prefix="/inventory", tags=["Inventory"])
 

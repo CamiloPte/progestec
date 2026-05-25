@@ -1,6 +1,8 @@
 from datetime import datetime
-from pydantic import BaseModel, EmailStr
 from typing import Optional
+
+from pydantic import BaseModel, EmailStr
+
 
 class Token(BaseModel):
     access_token: str
@@ -12,6 +14,7 @@ class TokenPayload(BaseModel):
     """
     Payload del JWT (decodificado)
     """
+
     sub: str  # email del usuario
     role: str
 
@@ -32,6 +35,7 @@ class RegisterRequest(BaseModel):
 
 class SetPasswordRequest(BaseModel):
     new_password: str
+
 
 class UserCreatedResponse(BaseModel):
     id: int

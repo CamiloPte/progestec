@@ -1,9 +1,11 @@
 from typing import Optional, Sequence
+
 from sqlalchemy.orm import Session
-from app.models.ticket_status import TicketStatus
+
 from app.core.ticket_status_visibility import (
     get_allowed_status_codes_for_role,
 )
+from app.models.ticket_status import TicketStatus
 
 
 class TicketStatusCRUD:
@@ -49,5 +51,6 @@ class TicketStatusCRUD:
         if allowed_codes is not None:
             query = query.filter(TicketStatus.code.in_(allowed_codes))
         return query.order_by(TicketStatus.order).all()
+
 
 ticket_status_crud = TicketStatusCRUD()

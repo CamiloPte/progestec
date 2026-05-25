@@ -1,8 +1,8 @@
-from typing import Dict, Any, Optional, Sequence, List
 from datetime import datetime
+from typing import Any, Dict, List, Optional, Sequence
 
-from sqlalchemy.orm import Session, selectinload, joinedload
 from sqlalchemy import func
+from sqlalchemy.orm import Session, joinedload
 
 from app.models.expense import Expense, ExpenseCategory
 
@@ -14,7 +14,9 @@ class ExpenseCategoryCRUD:
         db.flush()
         return category
 
-    def update(self, db: Session, category: ExpenseCategory, data: Dict[str, Any]) -> ExpenseCategory:
+    def update(
+        self, db: Session, category: ExpenseCategory, data: Dict[str, Any]
+    ) -> ExpenseCategory:
         for field, value in data.items():
             setattr(category, field, value)
         db.flush()
@@ -112,9 +114,7 @@ class ExpenseCRUD:
         to_date: Optional[datetime] = None,
     ) -> float:
         """Suma total de gastos en un período."""
-        query = db.query(func.coalesce(func.sum(Expense.amount), 0)).filter(
-            Expense.state == 1
-        )
+        query = db.query(func.coalesce(func.sum(Expense.amount), 0)).filter(Expense.state == 1)
 
         if from_date:
             query = query.filter(Expense.expense_date >= from_date)
@@ -168,6 +168,7 @@ class ExpenseCRUD:
     ) -> List[Dict[str, Any]]:
         """Totales mensuales de gastos para gráficos de tendencia."""
         from datetime import datetime
+
         from dateutil.relativedelta import relativedelta
 
         end_date = datetime.utcnow()

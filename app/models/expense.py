@@ -1,12 +1,13 @@
-from sqlalchemy import Column, Integer, Numeric, String, ForeignKey, DateTime, Text, text
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, Numeric, String, Text, text
 from sqlalchemy.orm import relationship
 
 from app.db.base_class import Base
-from app.models.mixins import TimestampStateMixin, PKMixin
+from app.models.mixins import PKMixin, TimestampStateMixin
 
 
 class ExpenseCategory(Base, PKMixin, TimestampStateMixin):
     """Categorías de gastos: Compras de inventario, Servicios, Nómina, etc."""
+
     __tablename__ = "expense_categories"
 
     name = Column(String(100), nullable=False, unique=True)
@@ -18,6 +19,7 @@ class ExpenseCategory(Base, PKMixin, TimestampStateMixin):
 
 class Expense(Base, PKMixin, TimestampStateMixin):
     """Registro de gastos operativos del negocio."""
+
     __tablename__ = "expenses"
 
     category_id = Column(
@@ -31,7 +33,7 @@ class Expense(Base, PKMixin, TimestampStateMixin):
     payment_method = Column(String(30), nullable=False)  # CASH, CARD, TRANSFER, OTHER
     reference = Column(String(100))  # Número de factura o recibo del proveedor
     expense_date = Column(DateTime, nullable=False, server_default=text("CURRENT_TIMESTAMP"))
-    
+
     # Vinculación opcional con compras de inventario
     part_id = Column(
         Integer,
@@ -40,13 +42,13 @@ class Expense(Base, PKMixin, TimestampStateMixin):
         index=True,
     )
     quantity = Column(Integer)  # Si es compra de inventario
-    
+
     # Vinculación opcional con proveedor (para futuro)
     supplier_name = Column(String(150))
     supplier_rut = Column(String(20))  # RUT/NIT del proveedor
-    
+
     notes = Column(Text)
-    
+
     created_by_id = Column(
         Integer,
         ForeignKey("users.id", onupdate="CASCADE", ondelete="SET NULL"),

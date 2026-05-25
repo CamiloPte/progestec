@@ -2,23 +2,22 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
-from app.db.session import get_db
-from app.crud.user_crud import user_crud
-from app.core.security import verify_password, create_access_token
+from app.core.roles import ROLE_ADMIN, get_role_name
+from app.core.security import create_access_token, verify_password
 from app.core.security_deps import get_current_user
+from app.crud.user_crud import user_crud
+from app.db.session import get_db
 from app.models.user import User
 from app.schemas.auth import (
     LoginRequest,
-    Token,
     RegisterRequest,
-    UserCreatedResponse,
     SetPasswordRequest,
+    Token,
+    UserCreatedResponse,
 )
-from app.schemas.user import UserReadMinimal
-from app.core.roles import ROLE_ADMIN, get_role_name
-from app.services.module_access_service import module_access_service
 from app.schemas.common import MessageResponse
-
+from app.schemas.user import UserReadMinimal
+from app.services.module_access_service import module_access_service
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -68,7 +67,7 @@ def login(data: LoginRequest, db: Session = Depends(get_db)):
         "email": "admin@example.com",
         "password": "123456"
     }
-    
+
     Retorna el token y must_change_password para forzar cambio de contraseña
     en clientes nuevos.
     """

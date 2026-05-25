@@ -1,6 +1,6 @@
-from sqlalchemy import Column, Integer, DateTime, text
-from sqlalchemy.orm import declared_attr
+from sqlalchemy import Column, DateTime, Integer, text
 from sqlalchemy.dialects.mysql import TINYINT
+
 
 class TimestampStateMixin:
     # 1 = activo, 0 = inactivo (soft delete)
@@ -10,8 +10,9 @@ class TimestampStateMixin:
         DateTime,
         nullable=False,
         server_default=text("CURRENT_TIMESTAMP"),
-        server_onupdate=text("CURRENT_TIMESTAMP")
+        server_onupdate=text("CURRENT_TIMESTAMP"),
     )
+
 
 class PKMixin:
     id = Column(Integer, primary_key=True, index=True)

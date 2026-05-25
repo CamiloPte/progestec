@@ -3,10 +3,10 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-from app.db.session import get_db
 from app.core.security_deps import get_current_user
+from app.db.session import get_db
 from app.models.user import User
-from app.schemas.dashboard import DashboardSummary, ClientDashboardSummary
+from app.schemas.dashboard import ClientDashboardSummary, DashboardSummary
 from app.services.dashboard_service import dashboard_service
 
 router = APIRouter(prefix="/dashboard", tags=["dashboard"])
@@ -33,7 +33,7 @@ def get_client_dashboard(
 ):
     """
     Dashboard personalizado para clientes.
-    
+
     Incluye:
     - Notificaciones importantes (equipos listos, presupuestos pendientes)
     - Tickets activos con progreso visual

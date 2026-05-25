@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional, List
+from typing import List, Optional
 
 from app.schemas.common import BaseSchema, TimestampSchema
 from app.schemas.invoice_payment import InvoicePaymentRead
@@ -20,6 +20,7 @@ class InvoiceCreate(InvoiceBase):
 
 class InvoiceCreateFromTicket(BaseSchema):
     """Payload para crear factura desde un ticket (ticket_id viene en el path)."""
+
     labor_cost: float = 0
     discount_amount: float = 0
     tax_percentage: float = 0
@@ -30,6 +31,7 @@ class InvoiceCreateFromTicket(BaseSchema):
 
 class InvoiceUpdate(BaseSchema):
     """Payload para actualizar una factura DRAFT (agregar mano de obra, etc.)."""
+
     labor_cost: Optional[float] = None
     discount_amount: Optional[float] = None
     tax_percentage: Optional[float] = None

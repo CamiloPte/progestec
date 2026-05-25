@@ -3,15 +3,13 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.db.session import get_db
-from app.core.security_deps import get_current_user
 from app.core.roles import ROLE_ADMIN
+from app.core.security_deps import get_current_user
+from app.crud.module_crud import module_crud
+from app.db.session import get_db
 from app.models.user import User
 from app.schemas.module import ModuleReadDetail
-from app.schemas.module_role import ModuleRoleRead
-from app.schemas.common import MessageResponse
 from app.services.module_access_service import module_access_service
-from app.crud.module_crud import module_crud
 
 router = APIRouter(prefix="/modules", tags=["modules"])
 
