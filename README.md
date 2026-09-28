@@ -1,54 +1,74 @@
 # ProGesTec
 
-Sistema web para la gestión de servicio técnico de telefonía y laptops.
+ProGesTec es una plataforma web para administrar un servicio tecnico de telefonos,
+laptops y otros dispositivos. Centraliza la recepcion de equipos, el seguimiento de
+reparaciones, el inventario, la facturacion y el portal del cliente.
 
-Monorepo con tres unidades:
+El repositorio es un monorepo con tres unidades:
 
 | Carpeta | Stack | Puerto local |
 |---|---|---|
-| `app/` | FastAPI + SQLAlchemy + MySQL | 8000 |
-| `progestec-front/` | Angular 20 (SSR) | 4200 |
-| `catalog-service/` | Express + PostgreSQL | 5000 |
+| `app/` | FastAPI, SQLAlchemy, Alembic y MySQL | `http://localhost:8000` |
+| `progestec-front/` | Angular 20, TypeScript, RxJS y SSR | `http://localhost:4200` |
+| `catalog-service/` | Express, Node.js y PostgreSQL | `http://localhost:5000` |
+
+## Estado actual
+
+El sistema se encuentra en estabilizacion y auditoria antes de pasar a produccion.
+Tickets, roles, portal cliente, inventario y facturacion tienen implementacion activa,
+pero deben validarse de extremo a extremo y simplificarse algunos flujos.
+
+Consulta [docs/PROJECT_STATUS.md](docs/PROJECT_STATUS.md) para el estado por modulo y
+[docs/ROADMAP.md](docs/ROADMAP.md) para el orden de trabajo.
 
 ## Requisitos
+
 - Docker Desktop
-- Node 22+
-- Python 3.11 (si quieres correr el backend fuera de Docker)
+- Node.js 22 o superior
+- Python 3.11 o superior para ejecutar el backend fuera de Docker
 
-## Setup rápido (Windows)
+## Inicio con Docker
+
+Docker Compose proporciona MySQL y PostgreSQL. Los scripts del repositorio arrancan la
+API, el catalogo y el frontend segun el flujo de desarrollo local.
+
 ```bat
-:: 1) Variables de entorno
 copy .env.example .env
-:: edita .env con tus valores
-
-:: 2) Arranque completo
 scripts\start-all.bat
 ```
 
-Esto levanta:
-- MySQL y Postgres en contenedores
-- API FastAPI en `http://localhost:8000` (Swagger en `/docs`)
-- Catalog service en `http://localhost:5000`
-- Frontend Angular en `http://localhost:4200`
-
-## Setup manual
 ```bash
-# Backend (sin Docker)
+docker compose ps
+```
+
+La API expone Swagger en `http://localhost:8000/docs`.
+
+## Inicio manual
+
+Backend:
+
+```powershell
 python -m venv .venv
-.venv\Scripts\activate         # Windows
+.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
 alembic upgrade head
 uvicorn app.main:app --reload
+```
 
-# Frontend
+Frontend:
+
+```powershell
 cd progestec-front
 npm install
-ng serve
+npm start
+```
 
-# Catálogo
+Catalogo:
+
+```powershell
 cd catalog-service
 npm install
-node src/server.js
+npm run dev
 ```
 
 ## Migraciones
@@ -58,37 +78,47 @@ alembic upgrade head
 alembic downgrade -1
 ```
 
-## Estructura del proyecto
-```
-.
-├── .kiro/                  # Specs y steering (reglas que guían el desarrollo)
-├── alembic/                # Migraciones DB
-├── app/                    # Backend FastAPI
-│   ├── api/routes/         # Endpoints HTTP
-│   ├── core/               # Config, security, logger
-│   ├── crud/               # Acceso a datos
-│   ├── models/             # Modelos SQLAlchemy
-│   ├── schemas/            # Schemas Pydantic
-│   └── services/           # Lógica de negocio
-├── catalog-service/        # Microservicio Express
-├── docs/                   # Documentación funcional del proyecto
-├── progestec-front/        # Frontend Angular
-└── scripts/                # Scripts .bat de arranque (Windows)
+## Pruebas y calidad
+
+```bash
+pytest
+ruff check .
+ruff format --check .
 ```
 
-## Documentación
-- `docs/DOCUMENTO_PROYECTO_ACTUALIZADO.md` — vista funcional del producto
-- `docs/ESTADO_ACTUAL_PROYECTO.md` — qué está hecho y qué no
-- `docs/OBJETIVOS_Y_PLAN_ACCION.md` — siguientes pasos
-- `docs/FACTURACION_BACKEND.md` y `docs/FACTURACION_FRONTEND.md` — módulo facturación
-- `.kiro/steering/` — reglas de arquitectura, convenciones y workflow
+```powershell
+cd progestec-front
+npm test -- --watch=false --browsers=ChromeHeadless
+npm run build
+```
 
-## Contribuir
-Lee `.kiro/steering/git-workflow.md` para flujo de ramas y formato de commits.
-Resumen:
-- Una rama por tarea: `feat/...`, `fix/...`, `refactor/...`
-- Conventional Commits (`feat(tickets): ...`)
-- PRs pequeños, squash merge
+La estrategia de pruebas y las brechas conocidas estan en
+[docs/OPERATIONS.md](docs/OPERATIONS.md).
+
+## Estructura
+
+```
+app/                 API FastAPI y logica de negocio
+alembic/             Migraciones de base de datos
+catalog-service/     Catalogo independiente de dispositivos
+progestec-front/     Aplicacion Angular SSR
+tests/               Pruebas backend
+scripts/             Automatizacion local para Windows
+docs/                Documentacion canonica del producto
+.github/             Configuracion compartida de Copilot y CI
+```
+
+La arquitectura esta en [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), los roles en
+[docs/ROLES.md](docs/ROLES.md) y el flujo financiero en [docs/FINANCE.md](docs/FINANCE.md).
+Las variables sensibles deben vivir en `.env`; nunca se deben confirmar secretos,
+tokens, dumps o archivos subidos por usuarios.
+
+## Flujo de trabajo
+
+Cada cambio debe desarrollarse en una rama de tarea, validarse localmente y enviarse
+mediante Pull Request. Se usan Conventional Commits y revisiones pequenas. La
+configuracion de Copilot del repositorio define las reglas para agentes, skills,
+instrucciones y hooks.
 
 ## Licencia
 Privado. Todos los derechos reservados.

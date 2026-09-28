@@ -8,9 +8,6 @@ on:
       - ".github/workflows/catalog-ci.yml"
   pull_request:
     branches: [main]
-    paths:
-      - "catalog-service/**"
-      - ".github/workflows/catalog-ci.yml"
 
 jobs:
   syntax:
