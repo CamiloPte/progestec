@@ -1,16 +1,18 @@
-# ProGesTec Copilot Instructions
+# Instrucciones de Copilot para ProGesTec
 
-- Treat this repository as a production-bound product, not an academic prototype.
-- Read the relevant code, tests and canonical docs before editing.
-- Keep changes small, explicit and limited to the requested area.
-- Preserve the monorepo boundaries: FastAPI/MySQL, Angular SSR, and catalog Express/PostgreSQL.
-- Do not introduce AEM, HTL, React, Vue, Tailwind or unrelated frameworks.
-- Backend flow: routes -> services -> crud -> models/schemas. Keep business rules in services.
-- Frontend uses Angular 20 standalone components, lazy routes, TypeScript and RxJS.
-- Backend and frontend contracts must be checked together for API changes.
-- CORS is intentionally permissive for local development. Do not change it during unrelated tasks.
-- Never expose secrets, tokens, uploads, database dumps or real customer data.
-- Do not run destructive migrations, resets, deletes or production actions without explicit confirmation.
-- After edits, run the narrowest relevant test, lint or build before expanding scope.
-- Update the canonical docs when behavior, architecture, operations or roadmap changes.
-- Prefer Spanish user-facing text and ASCII in source files unless the existing file requires another encoding.
+- Trata este repositorio como un producto orientado a produccion, no como un prototipo academico.
+- Lee el codigo, las pruebas y la documentacion canonica relevante antes de editar.
+- Mantén los cambios pequeños, explicitos y limitados al area solicitada.
+- Conserva los limites del monorepo: FastAPI/MySQL, Angular SSR y catalogo Express/PostgreSQL.
+- No introduzcas AEM, HTL, React, Vue, Tailwind ni frameworks no relacionados.
+- Flujo backend: routes -> services -> crud -> models/schemas. La logica de negocio vive en services.
+- El frontend usa componentes standalone de Angular 20, rutas lazy, TypeScript y RxJS.
+- Los contratos backend/frontend deben revisarse juntos cuando cambie una API.
+- CORS es deliberadamente permisivo en desarrollo local. No lo cambies en tareas no relacionadas.
+- Nunca expongas secretos, tokens, uploads, dumps de bases de datos ni datos reales de clientes.
+- No ejecutes migraciones destructivas, resets, borrados ni acciones productivas sin confirmacion explicita.
+- Despues de editar, ejecuta la prueba, lint o build mas especifico antes de ampliar el alcance.
+- Actualiza la documentacion canonica cuando cambie el comportamiento, la arquitectura, la operacion o el roadmap.
+- Mantén los comentarios de codigo breves y directos; agregalos solo para explicar decisiones o contexto no obvio.
+- No narres linea por linea, no repitas lo que el codigo ya expresa y no agregues bloques extensos de comentarios.
+- Usa español en los textos dirigidos al usuario y ASCII en los archivos fuente salvo que el archivo requiera otra codificacion.
