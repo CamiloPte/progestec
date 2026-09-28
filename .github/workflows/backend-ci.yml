@@ -13,16 +13,22 @@ on:
       - ".github/workflows/backend-ci.yml"
   pull_request:
     branches: [main]
-    paths:
-      - "app/**"
-      - "alembic/**"
-      - "tests/**"
-      - "requirements.txt"
-      - "requirements-dev.txt"
-      - "pyproject.toml"
-      - ".github/workflows/backend-ci.yml"
 
 jobs:
+  syntax:
+    name: syntax check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Compile sources
+        run: python -m compileall -q app alembic tests
+
   lint:
     name: lint (ruff)
     runs-on: ubuntu-latest
