@@ -1,16 +1,16 @@
 ---
-name: ProGesTec Angular
-description: "Use when editing Angular, TypeScript, HTML or CSS in the ProGesTec frontend."
+name: Angular de ProGesTec
+description: "Usar al editar Angular, TypeScript, HTML o CSS del frontend de ProGesTec."
 applyTo: "progestec-front/**/*.ts, progestec-front/**/*.html, progestec-front/**/*.css"
 ---
 
-# Angular Rules
+# Reglas de Angular
 
-- Keep Angular 20 standalone components and SSR compatibility.
-- Keep route-level lazy loading and existing core/feature/shared boundaries.
-- Guard browser-only APIs with the existing platform checks.
-- Keep HTTP access in core services and preserve typed models.
-- Prefer observable or signal state that matches nearby code; do not introduce a new state library casually.
-- Use accessible labels, focus states, keyboard operation and explicit loading/error/empty states.
-- Add or update a focused Jasmine test for behavior changes.
-- Run the frontend unit test and production build after changes.
+- Conserva los componentes standalone de Angular 20 y la compatibilidad con SSR.
+- Conserva la carga lazy por rutas y los limites existentes entre core, features y shared.
+- Protege las APIs exclusivas del navegador con las comprobaciones de plataforma existentes.
+- Mantén el acceso HTTP en los servicios de core y conserva los modelos tipados.
+- Prefiere observables o signals segun el codigo cercano; no introduzcas una libreria de estado sin necesidad.
+- Usa etiquetas accesibles, estados de foco, operacion con teclado y estados explicitos de carga, error y vacio.
+- Agrega o actualiza una prueba Jasmine enfocada cuando cambie el comportamiento.
+- Ejecuta las pruebas unitarias y el build de produccion del frontend despues de editar.

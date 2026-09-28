@@ -1,17 +1,17 @@
 ---
 name: module-audit
-description: 'Audit a ProGesTec module end to end. Use for tickets, inventory, finance, invoices, users, client portal, catalog or authentication to compare routes, services, UI, permissions, tests and documentation.'
-argument-hint: 'Module or workflow to audit'
+description: 'Auditar un modulo de ProGesTec de extremo a extremo. Usar para tickets, inventario, finanzas, facturas, usuarios, portal cliente, catalogo o autenticacion y comparar rutas, services, interfaz, permisos, pruebas y documentacion.'
+argument-hint: 'Modulo o flujo que se desea auditar'
 user-invocable: true
 ---
 
-# Module Audit
+# Auditoria de modulos
 
-1. Identify backend routes, services, CRUD, models and schemas.
-2. Identify Angular routes, components, services, guards and templates.
-3. Trace the primary user workflows and role boundaries.
-4. Locate tests and run the narrowest available checks.
-5. Compare implementation with canonical docs.
-6. Report confirmed behavior, missing behavior, structural problems, UX friction and prioritized next actions.
+1. Identifica rutas backend, services, CRUD, models y schemas.
+2. Identifica rutas Angular, componentes, services, guards y templates.
+3. Traza los flujos principales y los limites por rol.
+4. Localiza pruebas y ejecuta las comprobaciones disponibles mas pequeñas.
+5. Compara la implementacion con los documentos canonicos.
+6. Reporta comportamiento confirmado, faltantes, problemas estructurales, fricciones UX y acciones priorizadas.
 
-Do not edit files unless the user explicitly changes the request from audit to implementation.
+No edites archivos salvo que el usuario cambie explicitamente la solicitud de auditoria a implementacion.

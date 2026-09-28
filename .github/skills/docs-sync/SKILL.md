@@ -1,17 +1,17 @@
 ---
 name: docs-sync
-description: 'Audit and consolidate ProGesTec documentation. Use when README or docs are stale, duplicated, contradictory or scattered across the repository.'
-argument-hint: 'Documentation area or topic'
+description: 'Auditar y consolidar la documentacion de ProGesTec. Usar cuando README o docs esten desactualizados, duplicados, contradictorios o dispersos.'
+argument-hint: 'Area o tema documental'
 user-invocable: true
 ---
 
-# Documentation Synchronization
+# Sincronizacion documental
 
-1. Treat code, tests and current routes as the evidence source.
-2. Classify documents as canonical, useful source material, stale, duplicate or academic history.
-3. Consolidate one source of truth per topic.
-4. Preserve useful technical details while removing obsolete claims.
-5. Update README links and status labels.
-6. Run a link and formatting check before reporting completion.
+1. Trata codigo, pruebas y rutas actuales como fuente de evidencia.
+2. Clasifica documentos como canonicos, material util, desactualizados, duplicados o historicos.
+3. Consolida una fuente de verdad por tema.
+4. Conserva detalles tecnicos utiles y elimina afirmaciones obsoletas.
+5. Actualiza enlaces y estados del README.
+6. Ejecuta una comprobacion de enlaces y formato antes de reportar.
 
-Do not delete unique information without moving it to a canonical document or explicitly reporting the loss.
+No elimines informacion unica sin moverla a un documento canonico o reportar explicitamente la perdida.

@@ -1,4 +1,4 @@
 $message = @{
-  systemMessage = 'ProGesTec agent context: production-bound monorepo. Read .github/copilot-instructions.md and docs/PROJECT_STATUS.md before editing. Local CORS is intentional; do not change it in unrelated tasks.'
+  systemMessage = 'Contexto del agente ProGesTec: monorepo orientado a produccion. Lee .github/copilot-instructions.md y docs/PROJECT_STATUS.md antes de editar. El CORS local es intencional; no lo cambies en tareas no relacionadas.'
 } | ConvertTo-Json -Compress
 Write-Output $message

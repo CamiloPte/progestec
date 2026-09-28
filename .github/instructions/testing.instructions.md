@@ -1,14 +1,14 @@
 ---
-name: ProGesTec Testing
-description: "Use when adding, reviewing or running tests for backend, Angular, API contracts or browser workflows."
+name: Pruebas de ProGesTec
+description: "Usar al agregar, revisar o ejecutar pruebas de backend, Angular, contratos API o flujos del navegador."
 applyTo: "tests/**/*, progestec-front/**/*.spec.ts, **/package.json, pyproject.toml"
 ---
 
-# Testing Rules
+# Reglas de pruebas
 
-- Test user-visible behavior and business invariants, not implementation details only.
-- Cover happy paths, validation failures, permission failures and boundary values.
-- Prioritize login, roles, ticket lifecycle, inventory, invoices, payments and client visibility.
-- Keep unit tests fast and isolated; use integration or E2E tests for cross-service behavior.
-- Do not weaken or delete a failing test to make a check pass.
-- Report unavailable infrastructure separately from code failures.
+- Prueba el comportamiento visible para el usuario y los invariantes de negocio, no solo detalles internos.
+- Cubre caminos exitosos, fallos de validacion, fallos de permisos y valores limite.
+- Prioriza login, roles, ciclo de vida de tickets, inventario, facturas, pagos y visibilidad del cliente.
+- Mantén las pruebas unitarias rapidas y aisladas; usa integracion o E2E entre servicios.
+- No debilites ni elimines una prueba fallida para hacer pasar una comprobacion.
+- Reporta por separado la infraestructura no disponible y los fallos del codigo.

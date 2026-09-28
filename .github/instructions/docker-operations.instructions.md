@@ -1,14 +1,14 @@
 ---
-name: ProGesTec Docker Operations
-description: "Use when editing Dockerfiles, Compose files, startup scripts, environment configuration or deployment documentation."
+name: Operaciones Docker de ProGesTec
+description: "Usar al editar Dockerfiles, archivos Compose, scripts de inicio, configuracion de entorno o documentacion de despliegue."
 applyTo: "Dockerfile, docker-compose.yml, docker-compose*.yml, scripts/**/*, .env.example, docs/OPERATIONS.md"
 ---
 
-# Docker and Operations Rules
+# Reglas de Docker y operaciones
 
-- Keep local development behavior separate from future production hardening.
-- Preserve intentional local CORS behavior unless the task explicitly targets production configuration.
-- Do not commit secrets or customer data.
-- Review ports, volumes, health checks, restart behavior and service dependencies together.
-- Never add destructive database reset behavior to a normal startup command.
-- Validate Compose syntax and the affected service after changes.
+- Mantén separado el comportamiento de desarrollo local del endurecimiento futuro de produccion.
+- Conserva el CORS local intencional salvo que la tarea trate explicitamente la configuracion productiva.
+- No confirmes secretos ni datos de clientes.
+- Revisa juntos puertos, volumenes, health checks, reinicios y dependencias entre servicios.
+- Nunca agregues un reset destructivo de base de datos a un comando normal de inicio.
+- Valida la sintaxis Compose y el servicio afectado despues de editar.
